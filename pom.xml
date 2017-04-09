@@ -1,0 +1,64 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>io.primeval</groupId>
+		<artifactId>primeval-parent</artifactId>
+		<version>1-SNAPSHOT</version>
+		<relativePath />
+	</parent>
+
+	<groupId>io.primeval.saga</groupId>
+	<artifactId>saga</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+
+	<properties>
+		<primeval-commons.version>1.0.0-SNAPSHOT</primeval-commons.version>
+		<primeval-codex.version>1.0.0-SNAPSHOT</primeval-codex.version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>io.primeval</groupId>
+				<artifactId>primeval-commons</artifactId>
+				<version>${primeval-commons.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>io.primeval</groupId>
+				<artifactId>primeval-commons</artifactId>
+				<version>${primeval-commons.version}</version>
+				<scope>test</scope>
+				<type>test-jar</type>
+			</dependency>
+
+
+			<dependency>
+				<groupId>io.primeval</groupId>
+				<artifactId>primeval-codex</artifactId>
+				<version>${primeval-codex.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>io.primeval</groupId>
+				<artifactId>primeval-codex</artifactId>
+				<version>${primeval-codex.version}</version>
+				<scope>test</scope>
+				<type>test-jar</type>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<modules>
+		<module>saga-api</module>
+		<module>saga-core</module>
+		<module>saga-ninio</module>
+		<module>saga-examples</module>
+		<module>saga-it</module>
+		<module>saga-base-annotations</module>
+	</modules>
+</project>
+
