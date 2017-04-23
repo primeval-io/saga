@@ -23,6 +23,7 @@ mvn:io.primeval/primeval-jackson-guava18/1.0.0-SNAPSHOT@update
 mvn:io.primeval/primeval-jackson-guava21/1.0.0-SNAPSHOT@update
 
 mvn:io.primeval.saga/saga-api/1.0.0-SNAPSHOT@update
+mvn:io.primeval.saga/saga-guava/1.0.0-SNAPSHOT@update
 mvn:io.primeval.saga/saga-core/1.0.0-SNAPSHOT@update
 mvn:io.primeval.saga/saga-base-annotations/1.0.0-SNAPSHOT@update
 mvn:io.primeval.saga/saga-ninio/1.0.0-SNAPSHOT@update

@@ -15,6 +15,7 @@ import io.primeval.saga.annotations.Body;
 import io.primeval.saga.annotations.QueryParameter;
 import io.primeval.saga.annotations.Route;
 import io.primeval.saga.controller.Controller;
+import io.primeval.saga.guava.ImmutableResult;
 import io.primeval.saga.http.protocol.HttpMethod;
 import io.primeval.saga.http.protocol.HttpRequest;
 import io.primeval.saga.http.shared.Payload;
@@ -33,7 +34,8 @@ public final class TestController {
 
     @Route(method = HttpMethod.GET, uri = "simpleGet")
     public Result<String> simpleGet() {
-        return Result.ok("Hello World").contentType(MimeTypes.JSON).withHeader("X-Test", "Foobar");
+        return ImmutableResult.ok("Hello World").contentType(MimeTypes.JSON)
+                .withHeader("X-Test", "Foobar").build();
     }
 
     @Route(method = HttpMethod.POST, uri = "uppercase")
@@ -48,17 +50,17 @@ public final class TestController {
 
     @Route(method = HttpMethod.GET, uri = "hello")
     public Result<String> hello(@QueryParameter String who) {
-        return Result.ok("Hello " + who).contentType(MimeTypes.TEXT);
+        return ImmutableResult.ok("Hello " + who).contentType(MimeTypes.TEXT).build();
     }
 
     @Route(method = HttpMethod.GET, uri = "helloOptional")
     public Result<String> hello(@QueryParameter Optional<String> who) {
-        return Result.ok("Hello " + who.orElse("unknown person")).contentType(MimeTypes.TEXT);
+        return ImmutableResult.ok("Hello " + who.orElse("unknown person")).contentType(MimeTypes.TEXT).build();
     }
 
     @Route(method = HttpMethod.POST, uri = "intOptional")
     public Result<Integer> inttt(@Body Integer i) {
-        return Result.ok(i * 2).contentType(MimeTypes.JSON);
+        return ImmutableResult.ok(i * 2).contentType(MimeTypes.JSON).build();
     }
 
     @Route(method = HttpMethod.GET, uri = "ws")

@@ -54,6 +54,7 @@
 
 	<modules>
 		<module>saga-api</module>
+		<module>saga-guava</module>
 		<module>saga-core</module>
 		<module>saga-ninio</module>
 		<module>saga-examples</module>

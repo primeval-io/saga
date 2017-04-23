@@ -62,7 +62,7 @@ public class SagaRouteFinderTest {
                 }
             }).getValue();
 
-            System.out.println(value.statusCode + " " + value.payload);
+            System.out.println(value.statusCode() + " " + value.contents());
 
         }
 

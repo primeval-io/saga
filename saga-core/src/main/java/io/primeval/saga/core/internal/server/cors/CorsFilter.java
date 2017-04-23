@@ -19,9 +19,11 @@ import org.osgi.util.promise.Promises;
 
 import com.google.common.base.Joiner;
 
+import io.primeval.common.type.TypeTag;
 import io.primeval.saga.action.Action;
 import io.primeval.saga.action.Context;
 import io.primeval.saga.action.Result;
+import io.primeval.saga.guava.ImmutableResult;
 import io.primeval.saga.http.protocol.HeaderNames;
 import io.primeval.saga.http.protocol.HttpMethod;
 import io.primeval.saga.http.protocol.HttpRequest;
@@ -48,7 +50,7 @@ public final class CorsFilter implements RouteFilterProvider {
     public void setRouter(Router router) {
         this.router = router;
     }
-    
+
     @Override
     public Promise<Result<?>> call(Context context, Action action, Optional<Route> boundRoute) {
         // Is CORS required?
@@ -79,6 +81,7 @@ public final class CorsFilter implements RouteFilterProvider {
 
     }
 
+    @SuppressWarnings("unchecked")
     private Promise<Result<?>> preflight(Context context, Action action, String originHeader,
             Collection<Route> routes) {
         HttpRequest request = context.request();
@@ -101,10 +104,11 @@ public final class CorsFilter implements RouteFilterProvider {
             return action.function.apply(context);
         }
 
-        Result<?> res = Result.ok(""); // setup result
+        ImmutableResult.Builder res = ImmutableResult.builder(); // setup result
 
         if (!methods.contains(requestMethod.toUpperCase())) {
-            res = new Result<>(401, Collections.emptyMap(), "No such method for this route");
+            res = res.withStatusCode(401).setContents("No such method for this route")
+                    .withExplicitType(TypeTag.of(String.class));
         }
 
         Integer maxAge = config.max_age();
@@ -119,14 +123,14 @@ public final class CorsFilter implements RouteFilterProvider {
 
         String allowedMethods = Joiner.on(", ").join(methods);
 
-        Result<?> result = res.withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, allowedHosts)
+        res = res.withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, allowedHosts)
                 .withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_METHODS, allowedMethods)
                 .withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, exposedHeaders);
         if (config.allow_credentials()) {
-            result = result.withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+            res = res.withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
         }
 
-        return Promises.resolved(result);
+        return Promises.resolved(res.build());
     }
 
     protected Promise<Result<?>> retrieveAndReturnResult(Context context, Action action,
@@ -136,15 +140,16 @@ public final class CorsFilter implements RouteFilterProvider {
         // Is it actually a CORS request?
         if (originHeader != null) {
             resultPms = resultPms.map(result -> {
+                ImmutableResult.Builder resBuilder = ImmutableResult.copyOf(result);
                 String allowedHosts = getAllowedHostsHeader(originHeader);
-                result = result.withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, allowedHosts);
+                resBuilder = resBuilder.withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, allowedHosts);
                 if (config.allow_credentials()) {
-                    result = result.withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+                    resBuilder = resBuilder.withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
                 }
                 if (config.exposed_headers().length > 0) {
-                    result = result.withHeader(HeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS, getExposedHeadersHeader());
+                    resBuilder = resBuilder.withHeader(HeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS, getExposedHeadersHeader());
                 }
-                return result;
+                return resBuilder.build();
             });
 
         }

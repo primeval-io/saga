@@ -1,9 +1,5 @@
 package io.primeval.saga.it;
 
-import org.ops4j.pax.exam.Constants;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.util.PathUtils;
-
 import static org.ops4j.pax.exam.Constants.START_LEVEL_SYSTEM_BUNDLES;
 import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
 import static org.ops4j.pax.exam.CoreOptions.cleanCaches;
@@ -14,6 +10,10 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.url;
+
+import org.ops4j.pax.exam.Constants;
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.util.PathUtils;
 
 public final class TestProvisioningConfig {
     public static Option baseOptions() {
@@ -86,6 +86,7 @@ public final class TestProvisioningConfig {
 
     public static Option saga() {
         return composite(mavenBundle("io.primeval.saga", "saga-api").versionAsInProject(),
+                mavenBundle("io.primeval.saga", "saga-guava").versionAsInProject(),
                 mavenBundle("io.primeval.saga", "saga-core").versionAsInProject(),
                 mavenBundle("io.primeval.saga", "saga-base-annotations").versionAsInProject());
     }

@@ -5,10 +5,12 @@ import java.util.OptionalLong;
 
 import org.reactivestreams.Publisher;
 
+import io.primeval.common.type.TypeTag;
 import reactor.core.publisher.Mono;
 
 public final class Payload {
     public static final Payload EMPTY = new Payload(OptionalLong.of(0), Mono.empty());
+    public static final TypeTag<Payload> TYPETAG = TypeTag.of(Payload.class);
 
     public final OptionalLong contentLength;
     public final Publisher<ByteBuffer> content;

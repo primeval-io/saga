@@ -20,6 +20,7 @@ import io.primeval.saga.action.Action;
 import io.primeval.saga.action.Context;
 import io.primeval.saga.action.Result;
 import io.primeval.saga.core.internal.router.RouterImpl;
+import io.primeval.saga.guava.ImmutableResult;
 import io.primeval.saga.http.protocol.HttpMethod;
 import io.primeval.saga.renderer.MimeTypes;
 import io.primeval.saga.router.Route;
@@ -52,20 +53,21 @@ public class WithSagaHttpServerSetup extends ExternalResource implements TestRes
 
         Function<Context, Promise<Result<?>>> upperCase = context -> {
             Promise<String> bodyPms = context.body(String.class);
-            return bodyPms.map(s -> Result.ok(s.toUpperCase()).contentType(MimeTypes.JSON));
+            return bodyPms.map(s -> ImmutableResult.ok(s.toUpperCase()).contentType(MimeTypes.JSON).build());
         };
         router.addRouterActionProvider(providerFor(Route.create(HttpMethod.POST, ImmutableList.of("uppercase")),
                 upperCase, TypeTag.of(String.class)));
 
         Function<Context, Promise<Result<?>>> simpleGet = context -> {
             return Promises
-                    .resolved(Result.ok("Hello World").contentType(MimeTypes.JSON).withHeader("X-Test", "Foobar"));
+                    .resolved(ImmutableResult.ok("Hello World").contentType(MimeTypes.JSON)
+                            .withHeader("X-Test", "Foobar").build());
         };
         router.addRouterActionProvider(providerFor(Route.create(HttpMethod.GET, ImmutableList.of("simpleGet")),
                 simpleGet, TypeTag.of(String.class)));
 
         Function<Context, Promise<Result<?>>> plainText = context -> {
-            return Promises.resolved(Result.ok("HELLO!").contentType(MimeTypes.TEXT));
+            return Promises.resolved(ImmutableResult.ok("HELLO!").contentType(MimeTypes.TEXT).build());
         };
 
         router.addRouterActionProvider(providerFor(Route.create(HttpMethod.GET, ImmutableList.of("plainText")),
@@ -73,7 +75,8 @@ public class WithSagaHttpServerSetup extends ExternalResource implements TestRes
 
         Function<Context, Promise<Result<?>>> hello = context -> {
             return context.queryParameter("who", new TypeTag<Optional<String>>() {
-            }).map(param -> param.orElse("unknown user")).map(p -> Result.ok("Hello " + p).contentType(MimeTypes.TEXT));
+            }).map(param -> param.orElse("unknown user"))
+                    .map(p -> ImmutableResult.ok("Hello " + p).contentType(MimeTypes.TEXT).build());
         };
 
         router.addRouterActionProvider(providerFor(Route.create(HttpMethod.GET, ImmutableList.of("hello")),

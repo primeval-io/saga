@@ -27,6 +27,7 @@ import io.primeval.saga.core.internal.ContentType;
 import io.primeval.saga.core.internal.SagaCoreUtils;
 import io.primeval.saga.core.internal.action.ContextImpl;
 import io.primeval.saga.core.internal.http.shared.MimeParse;
+import io.primeval.saga.guava.ImmutableResult;
 import io.primeval.saga.http.protocol.HeaderNames;
 import io.primeval.saga.http.protocol.HttpRequest;
 import io.primeval.saga.http.protocol.HttpResponse;
@@ -113,14 +114,14 @@ public final class HttpServerEventHandler {
             return promise
                     .flatMap(result -> {
 
-                        TypeTag resultType = action.actionType; // allow redef
+                        TypeTag resultType = result.explicitType().orElse(action.actionType);
 
                         if (resultType.rawType() == Payload.class) {
-                            Payload payload = (Payload) result.payload;
-                            return Promises.resolved(new PayloadResult(result.statusCode, payload, result.headers));
+                            Payload payload = (Payload) result.contents();
+                            return Promises.resolved(new PayloadResult(result.statusCode(), payload, result.headers()));
                         }
 
-                        Promise<ContentType> contentTypePms = SagaCoreUtils.determineContentType(result.headers)
+                        Promise<ContentType> contentTypePms = SagaCoreUtils.determineContentType(result.headers())
                                 .map(Promises::resolved)
                                 .orElseGet(
                                         () -> serializer.serializableMediaTypes(resultType)
@@ -129,14 +130,18 @@ public final class HttpServerEventHandler {
                                                         Collections.emptyMap())));
                         return contentTypePms
                                 .flatMap(contentType -> {
-                                    Promise<Payload> payloadPms = serializer.serialize(result.payload,
+                                    Promise<Payload> payloadPms = serializer.serialize(result.contents(),
                                             resultType, contentType.mediaType, contentType.options);
 
-                                    Result<?> r = result.headers.containsKey(HeaderNames.CONTENT_TYPE) ? result
-                                            : result.withHeader(HeaderNames.CONTENT_TYPE, contentType.repr());
-
+                                    Result<?> r;
+                                    if (result.headers().containsKey(HeaderNames.CONTENT_TYPE)) {
+                                        r = result;
+                                    } else {
+                                        r = ImmutableResult.copyOf(result)
+                                                .withHeader(HeaderNames.CONTENT_TYPE, contentType.repr()).build();
+                                    }
                                     return payloadPms
-                                            .map(payload -> new PayloadResult(r.statusCode, payload, r.headers));
+                                            .map(payload -> new PayloadResult(r.statusCode(), payload, r.headers()));
                                 });
                     });
         })/* chain in more recovery */.recoverWith(p -> PromiseHelper.recoverFromWith(p, Throwable.class, error -> {

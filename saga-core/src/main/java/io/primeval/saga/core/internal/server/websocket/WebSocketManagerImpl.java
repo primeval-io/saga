@@ -4,13 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Optional;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimaps;
-import com.google.common.hash.Hashing;
-import com.google.common.io.BaseEncoding;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.util.promise.Promise;
@@ -21,11 +14,18 @@ import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
+
 import io.primeval.codex.promise.PromiseHelper;
 import io.primeval.codex.publisher.UnicastPublisher;
 import io.primeval.common.type.TypeTag;
 import io.primeval.saga.action.Result;
 import io.primeval.saga.core.internal.server.websocket.WebSocketFrame.Type;
+import io.primeval.saga.guava.ImmutableResult;
 import io.primeval.saga.http.protocol.HeaderNames;
 import io.primeval.saga.http.protocol.HttpRequest;
 import io.primeval.saga.http.protocol.Status;
@@ -89,7 +89,8 @@ public final class WebSocketManagerImpl implements WebSocketManager {
             @Override
             public Promise<Result<Payload>> result() {
                 return Promises
-                        .resolved(new Result<>(Status.SWITCHING_PROTOCOLS, Multimaps.asMap(responseHeaders), payload));
+                        .resolved(ImmutableResult.builder(payload).withStatusCode(Status.SWITCHING_PROTOCOLS)
+                                .withHeaders(responseHeaders).build());
             }
 
             @Override
@@ -101,7 +102,8 @@ public final class WebSocketManagerImpl implements WebSocketManager {
 
     }
 
-    private <T> void handleOutgoing(Publisher<WebSocketMessage<T>> messagePublisher, UnicastPublisher<WebSocketMessage<T>> in,
+    private <T> void handleOutgoing(Publisher<WebSocketMessage<T>> messagePublisher,
+            UnicastPublisher<WebSocketMessage<T>> in,
             UnicastPublisher<ByteBuffer> out,
             TypeTag<? extends T> typeTag) {
         Flux<WebSocketMessage<T>> flux = Flux.from(messagePublisher).doOnNext(message -> {
