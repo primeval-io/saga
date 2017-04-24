@@ -13,14 +13,13 @@ import com.google.common.collect.ImmutableList;
 import io.primeval.common.type.TypeTag;
 import io.primeval.saga.action.Context;
 import io.primeval.saga.action.Result;
-import io.primeval.saga.annotations.internal.SagaRouteFinder;
 import io.primeval.saga.http.protocol.HttpRequest;
 import io.primeval.saga.http.shared.Payload;
 import io.primeval.saga.router.RouterAction;
 
-public class SagaRouteFinderTest {
+public class ControllerRouteFinderTest {
 
-    SagaRouteFinder tested = new SagaRouteFinder();
+    ControllerRouteFinder tested = new ControllerRouteFinder();
 
     @Test
     public void test() throws Exception {
@@ -30,7 +29,7 @@ public class SagaRouteFinderTest {
 
         for (RouterAction ba : routerActions) {
 
-            Result value = ba.action.function.apply(new Context() {
+            Result result = ba.action.function.apply(new Context() {
 
                 @Override
                 public <T> Promise<T> queryParameter(String parameterName, TypeTag<? extends T> typeTag,
@@ -62,7 +61,8 @@ public class SagaRouteFinderTest {
                 }
             }).getValue();
 
-            System.out.println(value.statusCode() + " " + value.contents());
+            System.out.println(ba.action.actionKey.repr());
+            System.out.println(result.statusCode() + " " + result.contents().value());
 
         }
 

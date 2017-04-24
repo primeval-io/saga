@@ -22,6 +22,8 @@ import io.primeval.codex.dispatcher.Dispatcher;
 import io.primeval.codex.promise.PromiseHelper;
 import io.primeval.common.type.TypeTag;
 import io.primeval.saga.action.Action;
+import io.primeval.saga.action.ActionFunction;
+import io.primeval.saga.action.ActionKey;
 import io.primeval.saga.action.Result;
 import io.primeval.saga.core.internal.ContentType;
 import io.primeval.saga.core.internal.SagaCoreUtils;
@@ -36,10 +38,12 @@ import io.primeval.saga.http.server.spi.HttpServerEvent;
 import io.primeval.saga.http.shared.Payload;
 import io.primeval.saga.parameter.HttpParameterConverter;
 import io.primeval.saga.renderer.MimeTypes;
+import io.primeval.saga.router.Route;
 import io.primeval.saga.router.Router;
 import io.primeval.saga.router.RouterAction;
 import io.primeval.saga.router.filter.RouteFilterProvider;
 import io.primeval.saga.serdes.deserializer.Deserializer;
+import io.primeval.saga.serdes.serializer.Serializable;
 import io.primeval.saga.serdes.serializer.Serializer;
 
 public final class HttpServerEventHandler {
@@ -80,16 +84,28 @@ public final class HttpServerEventHandler {
                 .filter(f -> f.matches(request.uri)).collect(Collectors.toList()));
 
         return routerActionPms.map(routerAction -> {
-            Action nextAction = routerAction.map(ba -> wrapInDispatcher(ba.action)).orElse(notFoundAction());
-            for (RouteFilterProvider f : activeFilters) {
-                // TODO can filters change type?
-                Action next = nextAction;
-                Action filterAction = new Action(context -> {
-                    return PromiseHelper.wrapPromise(() -> f.call(context, next, routerAction.map(ra -> ra.route)));
-                }, nextAction.actionType, nextAction.actionKey);
-                nextAction = filterAction;
+            Optional<Route> boundRoute = routerAction.map(ra -> ra.route);
+            ActionKey actionKey;
+            ActionFunction fun;
+
+            if (routerAction.isPresent()) {
+                Action ra = routerAction.get().action;
+                actionKey = ra.actionKey;
+                fun = wrapInDispatcher(ra.function);
+            } else {
+                Action ra = notFoundAction();
+                actionKey = ra.actionKey;
+                fun = ra.function;
             }
-            return nextAction;
+
+            
+            for (RouteFilterProvider f : activeFilters) {
+                ActionFunction nextFun = fun;
+                fun = context -> {
+                    return f.call(context, nextFun, boundRoute);
+                };
+            }
+            return new Action(actionKey, fun);
         });
 
     }
@@ -107,17 +123,17 @@ public final class HttpServerEventHandler {
 
         ContextImpl actionContext = new ContextImpl(event, deserializer, paramConverter);
 
-        @SuppressWarnings("unchecked")
         Promise<PayloadResult> payloadResPms = actionForRoute.flatMap(action -> {
             Promise<Result<?>> promise = action.function.apply(actionContext);
 
             return promise
                     .flatMap(result -> {
 
-                        TypeTag resultType = result.explicitType().orElse(action.actionType);
+                        Serializable<?> serializable = result.contents();
+                        TypeTag resultType = serializable.typeTag();
 
                         if (resultType.rawType() == Payload.class) {
-                            Payload payload = (Payload) result.contents();
+                            Payload payload = (Payload) serializable.value();
                             return Promises.resolved(new PayloadResult(result.statusCode(), payload, result.headers()));
                         }
 
@@ -131,7 +147,7 @@ public final class HttpServerEventHandler {
                         return contentTypePms
                                 .flatMap(contentType -> {
                                     Promise<Payload> payloadPms = serializer.serialize(result.contents(),
-                                            resultType, contentType.mediaType, contentType.options);
+                                            contentType.mediaType, contentType.options);
 
                                     Result<?> r;
                                     if (result.headers().containsKey(HeaderNames.CONTENT_TYPE)) {
@@ -178,10 +194,8 @@ public final class HttpServerEventHandler {
         return DefaultActions.NOT_FOUND; // could be overriden by service
     }
 
-    private Action wrapInDispatcher(Action a) {
-        return new Action(context -> dispatcher.dispatch(() -> a.function.apply(context)).flatMap(x -> x),
-                a.actionType, a.actionKey);
-
+    private ActionFunction wrapInDispatcher(ActionFunction fun) {
+        return context -> dispatcher.dispatch(() -> fun.apply(context)).flatMap(x -> x);
     }
 
 }

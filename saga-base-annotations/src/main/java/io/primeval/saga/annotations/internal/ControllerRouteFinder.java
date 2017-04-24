@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -32,6 +34,7 @@ import io.primeval.saga.http.protocol.HttpRequest;
 import io.primeval.saga.http.shared.Payload;
 import io.primeval.saga.router.Route;
 import io.primeval.saga.router.RouterAction;
+import io.primeval.saga.serdes.serializer.Serializable;
 
 @Component
 public final class ControllerRouteFinder {
@@ -52,7 +55,7 @@ public final class ControllerRouteFinder {
     }
 
     public ActionInvocationHandler createInvocationHandler(Method m, Object target,
-            Function<Object, Promise<Result<?>>> wrap) {
+            Function<Object, Promise<Result<?>>> wrap, TypeTag resultTypeTag) {
 
         List<Function<Context, Promise<?>>> inject = new ArrayList<>(m.getParameterCount());
         for (Parameter parameter : m.getParameters()) {
@@ -95,10 +98,50 @@ public final class ControllerRouteFinder {
                 return Promises
                         .all(inject.stream().map(f -> f.apply(context)).collect(Collectors.toList()))
                         .flatMap(l -> PromiseHelper.wrap(() -> m.invoke(target, l.toArray())))
-                        .flatMap(res -> wrap.apply(res));
+                        .flatMap(res -> wrap.apply(res).map(r -> setType(r, resultTypeTag)));
             }
         };
 
+    }
+
+    @SuppressWarnings("rawtypes")
+    private <T> Result<?> setType(Result<T> res, TypeTag typeTag) {
+        if (typeTag.rawType() == Object.class) {
+            return res;
+        }
+        return res.contents().explicitTypeTag().map(t -> res).orElseGet(() -> new Result<T>() {
+            Serializable<T> wrappedContents = res.contents();
+            Serializable<T> contents = new Serializable<T>() {
+
+                @Override
+                public T value() {
+                    return wrappedContents.value();
+                }
+
+                @SuppressWarnings("unchecked")
+                @Override
+                public Optional<TypeTag<? extends T>> explicitTypeTag() {
+                    Optional<TypeTag<? extends T>> tt = Optional.of(typeTag);
+                    return tt;
+                }
+                
+            };
+            
+            @Override
+            public int statusCode() {
+                return res.statusCode();
+            }
+
+            @Override
+            public Map<String, List<String>> headers() {
+                return res.headers();
+            }
+
+            @Override
+            public Serializable<T> contents() {
+                return contents;
+            }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -154,9 +197,10 @@ public final class ControllerRouteFinder {
             }
 
             try {
-                ActionInvocationHandler actionInvocationHandler = createInvocationHandler(m, controller, wrap);
+                ActionInvocationHandler actionInvocationHandler = createInvocationHandler(m, controller, wrap,
+                        resultTypeTag);
                 RouterAction boundAction = new RouterAction(route,
-                        new Action(actionInvocationHandler::invoke, resultTypeTag, new MethodActionKey(m)));
+                        new Action(new MethodActionKey(m), actionInvocationHandler::invoke));
 
                 boundActions.add(boundAction);
             } catch (Exception e) {

@@ -15,8 +15,8 @@
 
 
 	<properties>
-		<primeval-commons.version>1.0.0-SNAPSHOT</primeval-commons.version>
-		<primeval-codex.version>1.0.0-SNAPSHOT</primeval-codex.version>
+		<primeval-commons.version>1.0.0</primeval-commons.version>
+		<primeval-codex.version>1.0.0</primeval-codex.version>
 	</properties>
 
 	<dependencyManagement>

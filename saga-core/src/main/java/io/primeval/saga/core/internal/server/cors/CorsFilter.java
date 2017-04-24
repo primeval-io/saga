@@ -20,7 +20,7 @@ import org.osgi.util.promise.Promises;
 import com.google.common.base.Joiner;
 
 import io.primeval.common.type.TypeTag;
-import io.primeval.saga.action.Action;
+import io.primeval.saga.action.ActionFunction;
 import io.primeval.saga.action.Context;
 import io.primeval.saga.action.Result;
 import io.primeval.saga.guava.ImmutableResult;
@@ -52,7 +52,7 @@ public final class CorsFilter implements RouteFilterProvider {
     }
 
     @Override
-    public Promise<Result<?>> call(Context context, Action action, Optional<Route> boundRoute) {
+    public Promise<Result<?>> call(Context context, ActionFunction actionFunction, Optional<Route> boundRoute) {
         // Is CORS required?
         List<String> originHeaders = context.request().headers.get(HeaderNames.ORIGIN);
 
@@ -61,13 +61,13 @@ public final class CorsFilter implements RouteFilterProvider {
 
         // If not Preflight
         if (context.request().method != HttpMethod.OPTIONS) {
-            return retrieveAndReturnResult(context, action, originHeader);
+            return retrieveAndReturnResult(context, actionFunction, originHeader);
         }
 
         // OPTIONS route exists, don't use filter! (might manually implement
         // CORS?)
         if (boundRoute.isPresent()) {
-            return action.function.apply(context);
+            return actionFunction.apply(context);
         }
 
         // Try "Preflight"
@@ -76,13 +76,13 @@ public final class CorsFilter implements RouteFilterProvider {
         Promise<Collection<Route>> routesPms = router.getRoutes();
 
         return routesPms.flatMap(routes -> {
-            return preflight(context, action, originHeader, routes);
+            return preflight(context, actionFunction, originHeader, routes);
         });
 
     }
 
     @SuppressWarnings("unchecked")
-    private Promise<Result<?>> preflight(Context context, Action action, String originHeader,
+    private Promise<Result<?>> preflight(Context context, ActionFunction actionFunction, String originHeader,
             Collection<Route> routes) {
         HttpRequest request = context.request();
         List<String> methods = new ArrayList<>(4); // expect POST PUT GET DELETE
@@ -94,20 +94,20 @@ public final class CorsFilter implements RouteFilterProvider {
 
         // If there's none, proceed to 404
         if (methods.isEmpty()) {
-            return action.function.apply(context);
+            return actionFunction.apply(context);
         }
 
         String requestMethod = HttpUtils.getHeader(request, HeaderNames.ACCESS_CONTROL_REQUEST_METHOD).orElse(null);
 
         // If it's not a CORS request, just proceed!
         if (originHeader == null || requestMethod == null) {
-            return action.function.apply(context);
+            return actionFunction.apply(context);
         }
 
         ImmutableResult.Builder res = ImmutableResult.builder(); // setup result
 
         if (!methods.contains(requestMethod.toUpperCase())) {
-            res = res.withStatusCode(401).setContents("No such method for this route")
+            res = res.withStatusCode(401).setValue("No such method for this route")
                     .withExplicitType(TypeTag.of(String.class));
         }
 
@@ -133,9 +133,9 @@ public final class CorsFilter implements RouteFilterProvider {
         return Promises.resolved(res.build());
     }
 
-    protected Promise<Result<?>> retrieveAndReturnResult(Context context, Action action,
+    protected Promise<Result<?>> retrieveAndReturnResult(Context context, ActionFunction actionFunction,
             String originHeader) {
-        Promise<Result<?>> resultPms = action.function.apply(context);
+        Promise<Result<?>> resultPms = actionFunction.apply(context);
 
         // Is it actually a CORS request?
         if (originHeader != null) {

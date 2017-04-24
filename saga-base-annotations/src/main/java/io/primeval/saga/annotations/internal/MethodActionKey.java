@@ -17,8 +17,9 @@ public final class MethodActionKey extends ActionKey {
 
     @Override
     public String repr() {
-        return method.getDeclaringClass().getName() + "#" + method.getName() + "("
-                + Stream.of(method.getParameterTypes()).map(c -> c.getName()).collect(Collectors.joining(",")) + ")";
+        return method.getGenericReturnType().toString() + "__" + method.getDeclaringClass().getName() + "#"
+                + method.getName() + "("
+                + Stream.of(method.getGenericParameterTypes()).map(c -> c.getTypeName()).collect(Collectors.joining(",")) + ")";
     }
 
     @Override

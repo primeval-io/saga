@@ -13,21 +13,19 @@ import io.primeval.common.type.TypeTag;
 import io.primeval.saga.action.Result;
 import io.primeval.saga.http.protocol.HeaderNames;
 import io.primeval.saga.http.protocol.Status;
+import io.primeval.saga.serdes.serializer.Serializable;
 
 public class ImmutableResult<T> implements Result<T> {
 
     public final int statusCode;
     public final ImmutableListMultimap<String, String> headers;
-    public final T contents;
-    public final Optional<TypeTag<T>> explicitType;
+    public final Serializable<T> contents;
 
-    private ImmutableResult(int statusCode, ImmutableListMultimap<String, String> headers, T contents,
-            Optional<TypeTag<T>> explicitType) {
+    private ImmutableResult(int statusCode, ImmutableListMultimap<String, String> headers, Serializable<T> contents) {
         super();
         this.statusCode = statusCode;
         this.headers = headers;
         this.contents = contents;
-        this.explicitType = explicitType;
     }
 
     @Override
@@ -41,21 +39,16 @@ public class ImmutableResult<T> implements Result<T> {
     }
 
     @Override
-    public T contents() {
+    public Serializable<T> contents() {
         return contents;
-    }
-
-    @Override
-    public Optional<TypeTag<T>> explicitType() {
-        return explicitType;
     }
 
     public static <T> Builder<T> copyOf(Result<T> result) {
         ArrayListMultimap<String, String> headers = ArrayListMultimap.create();
         result.headers().forEach((k, v) -> headers.putAll(k, v));
-        Builder<T> builder = new Builder<T>().setContents(result.contents()).withStatusCode(result.statusCode())
+        Builder<T> builder = new Builder<T>().setValue(result.contents().value()).withStatusCode(result.statusCode())
                 .withHeaders(headers);
-        result.explicitType().ifPresent(t -> builder.withExplicitType(t));
+        result.contents().explicitTypeTag().ifPresent(t -> builder.withExplicitType(t));
         return builder;
     }
 
@@ -64,7 +57,7 @@ public class ImmutableResult<T> implements Result<T> {
     }
 
     public static <T> Builder<T> builder(T contents) {
-        return new Builder<T>().setContents(contents);
+        return new Builder<T>().setValue(contents);
     }
 
     public static <T> Builder<T> ok() {
@@ -72,7 +65,7 @@ public class ImmutableResult<T> implements Result<T> {
     }
 
     public static <T> Builder<T> ok(T contents) {
-        return new Builder<T>().withStatusCode(Status.OK).setContents(contents);
+        return new Builder<T>().withStatusCode(Status.OK).setValue(contents);
     }
 
     public static <T> ImmutableResult.Builder<T> notFound() {
@@ -80,15 +73,15 @@ public class ImmutableResult<T> implements Result<T> {
     }
 
     public static <T> ImmutableResult.Builder<T> notFound(T contents) {
-        return new Builder<T>().withStatusCode(Status.NOT_FOUND).setContents(contents);
+        return new Builder<T>().withStatusCode(Status.NOT_FOUND).setValue(contents);
     }
 
     public final static class Builder<T> {
 
         private int statusCode = Status.OK;
         private ListMultimap<String, String> headers = ArrayListMultimap.create();
-        private T contents;
-        private Optional<TypeTag<T>> explicitType = Optional.empty();
+        private T value;
+        private Optional<TypeTag<? extends T>> explicitType = Optional.empty();
 
         public Builder<T> withStatusCode(int statusCode) {
             this.statusCode = statusCode;
@@ -100,8 +93,8 @@ public class ImmutableResult<T> implements Result<T> {
             return this;
         }
 
-        public Builder<T> setContents(T contents) {
-            this.contents = contents;
+        public Builder<T> setValue(T value) {
+            this.value = value;
             return this;
         }
 
@@ -115,13 +108,15 @@ public class ImmutableResult<T> implements Result<T> {
             return this;
         }
 
-        public Builder<T> withExplicitType(TypeTag<T> typeTag) {
+        public Builder<T> withExplicitType(TypeTag<? extends T> typeTag) {
             this.explicitType = Optional.of(typeTag);
             return this;
         }
 
         public ImmutableResult<T> build() {
-            return new ImmutableResult<T>(statusCode, ImmutableListMultimap.copyOf(headers), contents, explicitType);
+            Serializable<T> contents = explicitType.map(t -> Serializable.of(value, t))
+                    .orElseGet(() -> Serializable.of(value));
+            return new ImmutableResult<T>(statusCode, ImmutableListMultimap.copyOf(headers), contents);
         }
 
     }
