@@ -1,5 +1,6 @@
 package io.primeval.saga.annotations.internal;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
@@ -97,11 +98,23 @@ public final class ControllerRouteFinder {
             public Promise<Result<?>> invoke(Context context) {
                 return Promises
                         .all(inject.stream().map(f -> f.apply(context)).collect(Collectors.toList()))
-                        .flatMap(l -> PromiseHelper.wrap(() -> m.invoke(target, l.toArray())))
+                        .flatMap(l -> PromiseHelper.wrap(() -> {
+                            try {
+                                return m.invoke(target, l.toArray());
+                            } catch (InvocationTargetException e) {
+                                Throwable targetException = e.getCause();
+                                throw throwException(targetException);
+                            }
+                        }))
                         .flatMap(res -> wrap.apply(res).map(r -> setType(r, resultTypeTag)));
             }
         };
 
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends Throwable> RuntimeException throwException(Throwable exception) throws T {
+        throw (T) exception;
     }
 
     @SuppressWarnings("rawtypes")
@@ -124,9 +137,9 @@ public final class ControllerRouteFinder {
                     Optional<TypeTag<? extends T>> tt = Optional.of(typeTag);
                     return tt;
                 }
-                
+
             };
-            
+
             @Override
             public int statusCode() {
                 return res.statusCode();

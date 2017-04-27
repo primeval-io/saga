@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Collections;
 
 import javax.inject.Inject;
 
@@ -32,9 +33,11 @@ import com.google.common.collect.ImmutableList;
 
 import io.primeval.common.type.TypeTag;
 import io.primeval.saga.http.client.HttpClient;
+import io.primeval.saga.http.client.HttpClientRawResponse;
 import io.primeval.saga.http.server.HttpServer;
+import io.primeval.saga.renderer.MimeTypes;
 import io.primeval.saga.router.Router;
-import io.primeval.saga.serdes.deserializer.spi.MediaDeserializer;
+import io.primeval.saga.serdes.deserializer.Deserializer;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -74,7 +77,7 @@ public class SagaIntegrationTest {
     HttpClient httpClient;
 
     @Inject
-    MediaDeserializer mtd;
+    Deserializer deserializer;
 
     @Test
     // @Ignore
@@ -101,10 +104,24 @@ public class SagaIntegrationTest {
         String response = httpClient.to("localhost", port).get("/hello?who=World").execMap(String.class).getValue();
 
         assertThat(response).isEqualTo("Hello World");
-        
-        ImmutableList<String> ingredients = httpClient.to("localhost", port).get("/ingredients").execMap(new TypeTag<ImmutableList<String>>() {}).getValue();
+
+        ImmutableList<String> ingredients = httpClient.to("localhost", port).get("/ingredients")
+                .execMap(new TypeTag<ImmutableList<String>>() {
+                }).getValue();
 
         assertThat(ingredients).contains("Milk");
+
+        String item42 = httpClient.to("localhost", port).get("/item?id=42").execMap(String.class).getValue();
+        assertThat(item42).isEqualTo("Foo");
+
+        HttpClientRawResponse item37 = httpClient.to("localhost", port).get("/item?id=37").exec()
+                .getValue();
+        assertThat(item37.code).isEqualTo(404);
+        assertThat(
+                deserializer
+                        .deserialize(item37.payload, TypeTag.of(String.class),
+                                SagaIntegrationTest.class.getClassLoader(), MimeTypes.TEXT, Collections.emptyMap())
+                        .getValue()).isEqualTo("Unknown item 37");
 
         httpServer.stop().getValue();
 

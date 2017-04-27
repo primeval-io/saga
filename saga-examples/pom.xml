@@ -23,6 +23,13 @@
 			<version>${project.version}</version>
 		</dependency>
 
+
+		<dependency>
+			<groupId>io.primeval.saga</groupId>
+			<artifactId>saga-guava</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
 		<dependency>
 			<groupId>io.primeval.saga</groupId>
 			<artifactId>saga-base-annotations</artifactId>

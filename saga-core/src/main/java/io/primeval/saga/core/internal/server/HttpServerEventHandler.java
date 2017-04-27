@@ -5,8 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.SortedMap;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.osgi.util.promise.Promise;
@@ -56,10 +55,10 @@ public final class HttpServerEventHandler {
     private final Deserializer deserializer;
     private final HttpParameterConverter paramConverter;
 
-    private final AtomicReference<SortedMap<Orderer<RouteFilterProvider>, RouteFilterProvider>> routeFilterProviders;
+    private final Supplier<Collection<RouteFilterProvider>> routeFilterProviders;
 
     public HttpServerEventHandler(Dispatcher dispatcher, Router router,
-            AtomicReference<SortedMap<Orderer<RouteFilterProvider>, RouteFilterProvider>> routeFilterProviders,
+            Supplier<Collection<RouteFilterProvider>> routeFilterProviders,
             Serializer serializer,
             Deserializer deserializer,
             HttpParameterConverter paramConverter) {
@@ -78,7 +77,7 @@ public final class HttpServerEventHandler {
 
         Promise<Optional<RouterAction>> routerActionPms = router.getActionFor(request.method.name(), path);
 
-        Collection<RouteFilterProvider> filters = routeFilterProviders.get().values();
+        Collection<RouteFilterProvider> filters = routeFilterProviders.get();
 
         List<RouteFilterProvider> activeFilters = Lists.reverse(filters.stream()
                 .filter(f -> f.matches(request.uri)).collect(Collectors.toList()));

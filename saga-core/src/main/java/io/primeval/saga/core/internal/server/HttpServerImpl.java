@@ -1,5 +1,6 @@
 package io.primeval.saga.core.internal.server;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -15,12 +16,14 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
 
 import io.primeval.codex.dispatcher.Dispatcher;
 import io.primeval.codex.scheduler.Scheduler;
 import io.primeval.common.property.PropertyHelper;
+import io.primeval.saga.core.internal.server.exception.ExceptionMappingFilterProvider;
 import io.primeval.saga.http.server.HttpServer;
 import io.primeval.saga.http.server.spi.HttpServerEvent;
 import io.primeval.saga.http.server.spi.HttpServerProvider;
@@ -61,9 +64,15 @@ public final class HttpServerImpl implements HttpServer {
     private AtomicReference<SortedMap<Orderer<RouteFilterProvider>, RouteFilterProvider>> routeFilterProviders = new AtomicReference<>(
             ImmutableSortedMap.of());
 
+    private AtomicReference<ImmutableList<RouteFilterProvider>> allRouteFilterProviders = new AtomicReference<>(
+            ImmutableList.of());
+
+    private ExceptionMappingFilterProvider exceptionMappingFilterProvider;
+
     @Activate
     public void activate() {
-        httpServerEventHandler = new HttpServerEventHandler(dispatcher, router, routeFilterProviders, serializer,
+        httpServerEventHandler = new HttpServerEventHandler(dispatcher, router, this::currentFilterProviders,
+                serializer,
                 deserializer,
                 paramConverter);
     }
@@ -165,6 +174,16 @@ public final class HttpServerImpl implements HttpServer {
         this.scheduler = scheduler;
     }
 
+    public Collection<RouteFilterProvider> currentFilterProviders() {
+        return allRouteFilterProviders.get();
+    }
+
+    @Reference
+    public void setExceptionMappingFilterProvider(ExceptionMappingFilterProvider exceptionMappingFilterProvider) {
+        this.exceptionMappingFilterProvider = exceptionMappingFilterProvider;
+        rebuildRouteFilterProviders();;
+    }
+
     public void addRouteFilterProvider(RouteFilterProvider routeFilterProvider,
             Orderer<RouteFilterProvider> orderer) {
         routeFilterProviders.getAndUpdate(current -> {
@@ -174,6 +193,7 @@ public final class HttpServerImpl implements HttpServer {
                     .putAll(current)
                     .build();
         });
+        rebuildRouteFilterProviders();
     }
 
     public void removeRouteFilterProvider(RouteFilterProvider routeFilterProvider,
@@ -181,6 +201,12 @@ public final class HttpServerImpl implements HttpServer {
         routeFilterProviders.getAndUpdate(current -> {
             return ImmutableSortedMap.copyOf(Maps.filterKeys(current, key -> key.compareTo(orderer) != 0));
         });
+        rebuildRouteFilterProviders();
+    }
+
+    public void rebuildRouteFilterProviders() {
+        allRouteFilterProviders.set(ImmutableList.<RouteFilterProvider> builder().add(exceptionMappingFilterProvider)
+                .addAll(routeFilterProviders.get().values()).build());
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)

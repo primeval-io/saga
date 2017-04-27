@@ -1,5 +1,7 @@
 package io.primeval.saga.examples.helloworld;
 
+import java.util.NoSuchElementException;
+
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.util.promise.Promise;
@@ -36,6 +38,15 @@ public final class HelloWorldController {
     @Route(method = HttpMethod.GET, uri = "ingredients")
     public ImmutableList<String> ingredients() {
         return ImmutableList.of("Eggs", "Flour", "Milk");
+    }
+    
+    
+    @Route(method = HttpMethod.GET, uri = "item")
+    public String item(@QueryParameter Integer id){
+        if (id == 42) {
+            return "Foo";
+        }
+        throw new NoSuchElementException("Unknown item " + id);
     }
     
 
