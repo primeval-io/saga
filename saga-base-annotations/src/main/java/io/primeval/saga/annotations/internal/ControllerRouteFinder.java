@@ -119,26 +119,26 @@ public final class ControllerRouteFinder {
 
     @SuppressWarnings("rawtypes")
     private <T> Result<?> setType(Result<T> res, TypeTag typeTag) {
-        if (typeTag.rawType() == Object.class) {
+        if (!res.content().isPresent() || typeTag.rawType() == Object.class) {
             return res;
         }
-        return res.contents().explicitTypeTag().map(t -> res).orElseGet(() -> new Result<T>() {
-            Serializable<T> wrappedContents = res.contents();
+        Serializable<T> content = res.content().get();
+        return content.explicitTypeTag().map(t -> res).orElseGet(() -> new Result<T>() {
+            Optional<TypeTag<? extends T>> tt = Optional.of(typeTag);
             Serializable<T> contents = new Serializable<T>() {
 
                 @Override
                 public T value() {
-                    return wrappedContents.value();
+                    return content.value();
                 }
 
-                @SuppressWarnings("unchecked")
                 @Override
                 public Optional<TypeTag<? extends T>> explicitTypeTag() {
-                    Optional<TypeTag<? extends T>> tt = Optional.of(typeTag);
                     return tt;
                 }
 
             };
+            Optional<Serializable<T>> contentsWrap = Optional.of(contents);
 
             @Override
             public int statusCode() {
@@ -151,8 +151,8 @@ public final class ControllerRouteFinder {
             }
 
             @Override
-            public Serializable<T> contents() {
-                return contents;
+            public Optional<Serializable<T>> content() {
+                return contentsWrap;
             }
         });
     }

@@ -16,7 +16,7 @@ public final class ObjectToTextSerializer implements TypeSerializer<Object> {
     public Promise<Payload> serialize(Object object, String mimeType, Map<String, String> options) {
 
         String charset = options.getOrDefault("charset", "utf-8");
-        return serializeString(object.toString(), charset);
+        return serializeString(object != null ? object.toString() : "", charset);
     }
 
     private Promise<Payload> serializeString(String object, String charset) {

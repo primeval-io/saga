@@ -97,7 +97,6 @@ public final class HttpServerEventHandler {
                 fun = ra.function;
             }
 
-            
             for (RouteFilterProvider f : activeFilters) {
                 ActionFunction nextFun = fun;
                 fun = context -> {
@@ -116,8 +115,6 @@ public final class HttpServerEventHandler {
         List<String> acceptHeaders = request.headers.get(HeaderNames.ACCEPT);
         String accept = acceptHeaders == null || acceptHeaders.isEmpty() ? "*/*" : acceptHeaders.get(0);
 
-        System.out.println(accept);
-
         Promise<Action> actionForRoute = getAction(event);
 
         ContextImpl actionContext = new ContextImpl(event, deserializer, paramConverter);
@@ -128,9 +125,18 @@ public final class HttpServerEventHandler {
             return promise
                     .flatMap(result -> {
 
-                        Serializable<?> serializable = result.contents();
+                        // Handle empty results
+                        Serializable<?> serializable = result.content().map(s -> {
+                            // Void results always are empty payloads
+                            if (s.typeTag().rawType() == Void.class) {
+                                return null; // discard content if type is Void
+                            }
+                            return s;
+                        }).orElse((Serializable) Serializable.EMPTY_PAYLOAD);
+
                         TypeTag resultType = serializable.typeTag();
 
+                        // Handle Payload types: no serialization/content-type discovery.
                         if (resultType.rawType() == Payload.class) {
                             Payload payload = (Payload) serializable.value();
                             return Promises.resolved(new PayloadResult(result.statusCode(), payload, result.headers()));
@@ -145,7 +151,7 @@ public final class HttpServerEventHandler {
                                                         Collections.emptyMap())));
                         return contentTypePms
                                 .flatMap(contentType -> {
-                                    Promise<Payload> payloadPms = serializer.serialize(result.contents(),
+                                    Promise<Payload> payloadPms = serializer.serialize(serializable,
                                             contentType.mediaType, contentType.options);
 
                                     Result<?> r;
@@ -159,12 +165,12 @@ public final class HttpServerEventHandler {
                                             .map(payload -> new PayloadResult(r.statusCode(), payload, r.headers()));
                                 });
                     });
-        })/* chain in more recovery */.recoverWith(p -> PromiseHelper.recoverFromWith(p, Throwable.class, error -> {
+        }).recoverWith(p -> PromiseHelper.recoverFromWith(p, Throwable.class, error -> {
             Map<String, List<String>> headers = Multimaps
                     .asMap(ImmutableListMultimap.of(HeaderNames.CONTENT_TYPE, MimeTypes.TEXT + "; charset = utf-8"));
             ContentType contentType = SagaCoreUtils.determineContentType(headers).orElse(ContentType.UTF8_PLAIN_TEXT);
 
-            error.printStackTrace();
+            LOGGER.error("An exception was not recovered on {} {}", request.method, request.uri, error);
             Promise<Payload> payloadPms = serializer.serialize("Something wrong happened\n " + error.getMessage(),
                     TypeTag.of(String.class),
                     contentType.mediaType, contentType.options);
@@ -177,11 +183,6 @@ public final class HttpServerEventHandler {
             HttpResponse response = new HttpResponse(payloadRes.status, "", payloadRes.headers);
 
             event.respond(response, payload);
-
-            // GC/Flux subscription thing to explore
-            // Flux.from(respondPublisher).doOnError(error -> {
-            // LOGGER.trace("Could not send full payload (maybe client disconnected)", error);
-            // }).subscribe();
 
         }, failure -> {
             LOGGER.error("Could not send result", failure);

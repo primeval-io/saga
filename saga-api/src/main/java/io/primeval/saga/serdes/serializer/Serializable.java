@@ -3,8 +3,11 @@ package io.primeval.saga.serdes.serializer;
 import java.util.Optional;
 
 import io.primeval.common.type.TypeTag;
+import io.primeval.saga.http.shared.Payload;
 
 public interface Serializable<T> {
+
+    public static final Serializable<Payload> EMPTY_PAYLOAD = Serializable.of(Payload.EMPTY, Payload.TYPETAG);
 
     T value();
 
@@ -12,9 +15,11 @@ public interface Serializable<T> {
 
     default TypeTag<? extends T> typeTag() {
         return explicitTypeTag().orElseGet(() -> {
+            T value = value();
+            Class<?> clazz = value != null ? value.getClass() : Object.class;
             @SuppressWarnings("unchecked")
-            Class<? extends T> clazz = (Class<? extends T>) value().getClass();
-            return TypeTag.of(clazz);
+            TypeTag<? extends T> tt = (TypeTag<? extends T>) TypeTag.of(clazz);
+            return tt;
         });
     }
 
@@ -23,7 +28,7 @@ public interface Serializable<T> {
     }
 
     public static <T> Serializable<T> of(T object, TypeTag<? extends T> typeTag) {
-        if (!typeTag.rawType().isAssignableFrom(object.getClass())) {
+        if (object != null && !typeTag.rawType().isAssignableFrom(object.getClass())) {
             throw new IllegalArgumentException("Object type (" + object.getClass().getName()
                     + ") is not compatible with TypeTag (" + typeTag.toString() + ")");
         }

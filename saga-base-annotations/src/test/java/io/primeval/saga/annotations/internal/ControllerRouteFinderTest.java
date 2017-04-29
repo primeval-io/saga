@@ -29,7 +29,7 @@ public class ControllerRouteFinderTest {
 
         for (RouterAction ba : routerActions) {
 
-            Result result = ba.action.function.apply(new Context() {
+            Result<?> result = ba.action.function.apply(new Context() {
 
                 @Override
                 public <T> Promise<T> queryParameter(String parameterName, TypeTag<? extends T> typeTag,
@@ -62,7 +62,7 @@ public class ControllerRouteFinderTest {
             }).getValue();
 
             System.out.println(ba.action.actionKey.repr());
-            System.out.println(result.statusCode() + " " + result.contents().value());
+            System.out.println(result.statusCode() + " " + result.content().get().value());
 
         }
 

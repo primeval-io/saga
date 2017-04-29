@@ -153,7 +153,7 @@ public class ExceptionMappingFilterProviderTest {
 
         Result<?> result = promise.getValue();
         Assertions.assertThat(result.statusCode()).isEqualTo(404);
-        Assertions.assertThat(result.contents().value()).isEqualTo("Not found!");
+        Assertions.assertThat(result.content().get().value()).isEqualTo("Not found!");
 
     }
 
@@ -165,7 +165,7 @@ public class ExceptionMappingFilterProviderTest {
 
         Result<?> result = promise.getValue();
         Assertions.assertThat(result.statusCode()).isEqualTo(404);
-        Assertions.assertThat(result.contents().value()).isEqualTo("Missing fruit: banana!");
+        Assertions.assertThat(result.content().get().value()).isEqualTo("Missing fruit: banana!");
     }
 
     @Test
@@ -175,7 +175,7 @@ public class ExceptionMappingFilterProviderTest {
 
         Result<?> result = promise.getValue();
         Assertions.assertThat(result.statusCode()).isEqualTo(500);
-        Assertions.assertThat(Splitter.on('\n').splitToList((String) result.contents().value()).get(0))
+        Assertions.assertThat(Splitter.on('\n').splitToList((String) result.content().get().value()).get(0))
                 .isEqualTo("Internal server error on URI /foo: java.util.NoSuchElementException");
     }
 

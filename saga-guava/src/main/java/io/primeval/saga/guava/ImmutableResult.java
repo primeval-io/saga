@@ -19,13 +19,13 @@ public class ImmutableResult<T> implements Result<T> {
 
     public final int statusCode;
     public final ImmutableListMultimap<String, String> headers;
-    public final Serializable<T> contents;
+    public final Serializable<T> content;
 
-    private ImmutableResult(int statusCode, ImmutableListMultimap<String, String> headers, Serializable<T> contents) {
+    private ImmutableResult(int statusCode, ImmutableListMultimap<String, String> headers, Serializable<T> content) {
         super();
         this.statusCode = statusCode;
         this.headers = headers;
-        this.contents = contents;
+        this.content = content;
     }
 
     @Override
@@ -39,16 +39,39 @@ public class ImmutableResult<T> implements Result<T> {
     }
 
     @Override
-    public Serializable<T> contents() {
-        return contents;
+    public Optional<Serializable<T>> content() {
+        return Optional.ofNullable(content);
+    }
+
+    @Override
+    public String toString() {
+        return "ImmutableResult{status=" + statusCode() + ", headers=" + headers() + ", content=" + content() + "}";
+    }
+
+    @Override
+    public int hashCode() {
+        return Result.hashCode(this);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
+        if (!(obj instanceof Result<?>))
+            return false;
+        Result<?> that = (Result<?>) obj;
+        return Result.equals(this, that);
     }
 
     public static <T> Builder<T> copyOf(Result<T> result) {
         ArrayListMultimap<String, String> headers = ArrayListMultimap.create();
         result.headers().forEach((k, v) -> headers.putAll(k, v));
-        Builder<T> builder = new Builder<T>().setValue(result.contents().value()).withStatusCode(result.statusCode())
+        Builder<T> builder = new Builder<T>().withStatusCode(result.statusCode())
                 .withHeaders(headers);
-        result.contents().explicitTypeTag().ifPresent(t -> builder.withExplicitType(t));
+        result.content().ifPresent(content -> {
+            builder.setValue(content.value());
+            content.explicitTypeTag().ifPresent(t -> builder.withExplicitType(t));
+        });
         return builder;
     }
 
@@ -80,6 +103,7 @@ public class ImmutableResult<T> implements Result<T> {
 
         private int statusCode = Status.OK;
         private ListMultimap<String, String> headers = ArrayListMultimap.create();
+        private boolean hasContent = false;
         private T value;
         private Optional<TypeTag<? extends T>> explicitType = Optional.empty();
 
@@ -94,6 +118,7 @@ public class ImmutableResult<T> implements Result<T> {
         }
 
         public Builder<T> setValue(T value) {
+            this.hasContent = true;
             this.value = value;
             return this;
         }
@@ -114,8 +139,8 @@ public class ImmutableResult<T> implements Result<T> {
         }
 
         public ImmutableResult<T> build() {
-            Serializable<T> contents = explicitType.map(t -> Serializable.of(value, t))
-                    .orElseGet(() -> Serializable.of(value));
+            Serializable<T> contents = hasContent ? explicitType.map(t -> Serializable.of(value, t))
+                    .orElseGet(() -> Serializable.of(value)) : null;
             return new ImmutableResult<T>(statusCode, ImmutableListMultimap.copyOf(headers), contents);
         }
 

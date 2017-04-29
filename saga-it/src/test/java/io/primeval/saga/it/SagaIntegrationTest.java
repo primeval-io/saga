@@ -34,10 +34,13 @@ import com.google.common.collect.ImmutableList;
 import io.primeval.common.type.TypeTag;
 import io.primeval.saga.http.client.HttpClient;
 import io.primeval.saga.http.client.HttpClientRawResponse;
+import io.primeval.saga.http.protocol.HeaderNames;
+import io.primeval.saga.http.protocol.Status;
 import io.primeval.saga.http.server.HttpServer;
 import io.primeval.saga.renderer.MimeTypes;
 import io.primeval.saga.router.Router;
 import io.primeval.saga.serdes.deserializer.Deserializer;
+import reactor.core.publisher.Flux;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -122,6 +125,15 @@ public class SagaIntegrationTest {
                         .deserialize(item37.payload, TypeTag.of(String.class),
                                 SagaIntegrationTest.class.getClassLoader(), MimeTypes.TEXT, Collections.emptyMap())
                         .getValue()).isEqualTo("Unknown item 37");
+
+        HttpClientRawResponse emptyResp = httpClient.to("localhost", port).get("/emptyResult").exec().getValue();
+        assertThat(emptyResp.code).isEqualTo(Status.GONE);
+        assertThat(Flux.from(emptyResp.payload.content).collectList().block()).isEmpty();
+
+        HttpClientRawResponse emptyRespFluent = httpClient.to("localhost", port).get("/emptyFluent")
+                .withHeader(HeaderNames.ACCEPT, MimeTypes.JSON).exec().getValue();
+        assertThat(emptyRespFluent.code).isEqualTo(Status.OK);
+        assertThat(Flux.from(emptyRespFluent.payload.content).collectList().block()).isEmpty();
 
         httpServer.stop().getValue();
 

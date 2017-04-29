@@ -17,6 +17,7 @@ import io.primeval.saga.annotations.Route;
 import io.primeval.saga.controller.Controller;
 import io.primeval.saga.http.protocol.HttpMethod;
 import io.primeval.saga.http.protocol.HttpRequest;
+import io.primeval.saga.http.protocol.Status;
 import io.primeval.saga.http.shared.Payload;
 import io.primeval.saga.websocket.WebSocket;
 import io.primeval.saga.websocket.WebSocketManager;
@@ -34,21 +35,29 @@ public final class HelloWorldController {
     public String hello(@QueryParameter String who) {
         return "Hello " + who;
     }
-    
+
     @Route(method = HttpMethod.GET, uri = "ingredients")
     public ImmutableList<String> ingredients() {
         return ImmutableList.of("Eggs", "Flour", "Milk");
     }
-    
-    
+
     @Route(method = HttpMethod.GET, uri = "item")
-    public String item(@QueryParameter Integer id){
+    public String item(@QueryParameter Integer id) {
         if (id == 42) {
             return "Foo";
         }
         throw new NoSuchElementException("Unknown item " + id);
     }
+
+    @Route(method = HttpMethod.GET, uri = "emptyResult")
+    public Result<Void> emptyResult() {
+        return Result.create(Status.GONE);
+    }
     
+    @Route(method = HttpMethod.GET, uri = "emptyFluent")
+    public Void emptyFluent() {
+        return null;
+    }
 
     @Route(method = HttpMethod.GET, uri = "ws")
     public Promise<Result<Payload>> ws(HttpRequest request, @Body Payload payload) {
