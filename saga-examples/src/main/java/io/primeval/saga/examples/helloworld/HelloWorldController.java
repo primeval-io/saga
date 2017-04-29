@@ -1,5 +1,6 @@
 package io.primeval.saga.examples.helloworld;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.osgi.service.component.annotations.Component;
@@ -50,7 +51,7 @@ public final class HelloWorldController {
     }
 
     @Route(method = HttpMethod.GET, uri = "emptyResult")
-    public Result<Void> emptyResult() {
+    public Result<List<String>> emptyResult() {
         return Result.create(Status.GONE);
     }
     
