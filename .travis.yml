@@ -2,6 +2,7 @@ language: java
 jdk:
 - oraclejdk8
 sudo: false
+dist: trusty
 script: mvn clean verify
 after_success:
 - VERSION=`python -c "import xml.etree.ElementTree as ET;  print(ET.parse(open('pom.xml')).getroot().find('{http://maven.apache.org/POM/4.0.0}version').text)"`
