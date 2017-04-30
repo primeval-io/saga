@@ -30,6 +30,7 @@ import io.primeval.codex.context.ExecutionContextSwitch;
 import io.primeval.codex.promise.CancelableDeferred;
 import io.primeval.codex.promise.CancelablePromise;
 import io.primeval.codex.promise.DelegatingCancelablePromise;
+import io.primeval.common.serdes.DeserializationException;
 import io.primeval.common.type.TypeTag;
 import io.primeval.saga.core.internal.ContentType;
 import io.primeval.saga.core.internal.SagaCoreUtils;
@@ -41,7 +42,6 @@ import io.primeval.saga.http.client.method.HttpClientMethod;
 import io.primeval.saga.http.protocol.HeaderNames;
 import io.primeval.saga.http.protocol.HttpMethod;
 import io.primeval.saga.http.shared.Payload;
-import io.primeval.common.serdes.DeserializationException;
 import io.primeval.saga.serdes.deserializer.Deserializer;
 import io.primeval.saga.serdes.serializer.Serializer;
 

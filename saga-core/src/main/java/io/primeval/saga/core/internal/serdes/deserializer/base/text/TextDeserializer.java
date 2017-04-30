@@ -4,10 +4,10 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.util.promise.Promise;
 
 import io.primeval.codex.promise.PromiseHelper;
+import io.primeval.common.serdes.DeserializationException;
 import io.primeval.common.type.TypeTag;
 import io.primeval.saga.renderer.MimeTypes;
 import io.primeval.saga.serdes.SupportsMediaTypes;
-import io.primeval.common.serdes.DeserializationException;
 import io.primeval.saga.serdes.deserializer.spi.MediaDeserializer;
 import io.primeval.saga.serdes.deserializer.spi.TypeDeserializer;
 

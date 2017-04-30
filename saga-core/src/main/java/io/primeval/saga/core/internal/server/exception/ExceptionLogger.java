@@ -7,7 +7,7 @@ import org.osgi.util.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.lambdacube.component.annotation.common.ServiceRanking;
+import io.primeval.component.annotation.properties.common.ServiceRanking;
 import io.primeval.saga.action.Context;
 import io.primeval.saga.action.Result;
 import io.primeval.saga.router.Route;

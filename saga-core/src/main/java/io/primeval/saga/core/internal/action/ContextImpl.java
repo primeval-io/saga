@@ -1,6 +1,13 @@
 package io.primeval.saga.core.internal.action;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.osgi.util.promise.Promise;
+import org.osgi.util.promise.Promises;
+
 import com.google.common.collect.ImmutableList;
+
 import io.primeval.codex.promise.PromiseHelper;
 import io.primeval.common.serdes.DeserializationException;
 import io.primeval.common.type.GenericBoxes;
@@ -14,11 +21,6 @@ import io.primeval.saga.http.shared.Payload;
 import io.primeval.saga.parameter.HttpParameterConverter;
 import io.primeval.saga.parameter.HttpParameterConvertingException;
 import io.primeval.saga.serdes.deserializer.Deserializer;
-import org.osgi.util.promise.Promise;
-import org.osgi.util.promise.Promises;
-
-import java.util.List;
-import java.util.Optional;
 
 public final class ContextImpl implements Context {
 

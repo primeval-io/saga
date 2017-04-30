@@ -5,8 +5,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import io.lambdacube.component.annotation.ComponentProperty;
-import io.lambdacube.component.annotation.ComponentPropertyGroup;
+import io.primeval.component.annotation.properties.ComponentProperty;
+import io.primeval.component.annotation.properties.ComponentPropertyGroup;
 
 @ComponentPropertyGroup
 @Target(ElementType.TYPE)
