@@ -15,8 +15,8 @@ mvn:com.davfx.ninio/ninio-dns/3.0.19@update
 mvn:com.davfx.ninio/ninio-http/3.0.19@update
 mvn:org.reactivestreams/reactive-streams/1.0.0@update
 mvn:io.projectreactor/reactor-core/3.0.5.RELEASE@update
-mvn:io.primeval/primeval-commons/1.0.0-SNAPSHOT@update
-mvn:io.primeval/primeval-codex/1.0.0-SNAPSHOT@update
+mvn:io.primeval/primeval-commons/1.1.0-SNAPSHOT@update
+mvn:io.primeval/primeval-codex/1.1.0-SNAPSHOT@update
 mvn:io.primeval/primeval-json/1.0.0-SNAPSHOT@update
 mvn:io.primeval/primeval-json-jackson/1.0.0-SNAPSHOT@update
 mvn:io.primeval/primeval-jackson-guava18/1.0.0-SNAPSHOT@update
