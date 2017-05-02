@@ -14,7 +14,7 @@
 	<description>A Saga backend using Ninio networking library</description>
 
 	<properties>
-		<ninio.version>3.0.19</ninio.version>
+		<ninio.version>3.0.20</ninio.version>
 		<primeval-json-jackson.version>1.0.0-SNAPSHOT</primeval-json-jackson.version>
 	</properties>
 
