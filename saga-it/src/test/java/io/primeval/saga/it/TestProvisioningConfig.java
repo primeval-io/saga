@@ -12,6 +12,7 @@ import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.url;
 
 import org.ops4j.pax.exam.Constants;
+import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.util.PathUtils;
 
@@ -38,6 +39,14 @@ public final class TestProvisioningConfig {
                         .startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 url("link:classpath:META-INF/links/org.apache.geronimo.specs.atinject.link")
                         .startLevel(START_LEVEL_SYSTEM_BUNDLES));
+    }
+
+    public static Option extraSnapshotRepository() {
+        String SNAPSHOT_REPO = System.getenv("EXTRA_SNAPSHOT_REPOSITORY");
+        if (SNAPSHOT_REPO != null) {
+            return CoreOptions.repository(SNAPSHOT_REPO).allowSnapshots();
+        }
+        return CoreOptions.composite();
     }
 
     public static Option testingBundles() {

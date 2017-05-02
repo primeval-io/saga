@@ -2,6 +2,7 @@ package io.primeval.saga.it;
 
 import static io.primeval.saga.it.TestProvisioningConfig.baseOptions;
 import static io.primeval.saga.it.TestProvisioningConfig.dsAndFriends;
+import static io.primeval.saga.it.TestProvisioningConfig.extraSnapshotRepository;
 import static io.primeval.saga.it.TestProvisioningConfig.ninio;
 import static io.primeval.saga.it.TestProvisioningConfig.primevalCommonsAndCodex;
 import static io.primeval.saga.it.TestProvisioningConfig.primevalJson;
@@ -11,6 +12,7 @@ import static io.primeval.saga.it.TestProvisioningConfig.slf4jLogging;
 import static io.primeval.saga.it.TestProvisioningConfig.testingBundles;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,7 +56,9 @@ public class SagaIntegrationTest {
 
     @Configuration
     public Option[] config() throws Throwable {
-        return new Option[] {
+
+        return options(
+                extraSnapshotRepository(),
                 baseOptions(),
                 testingBundles(),
                 slf4jLogging(),
@@ -63,8 +67,7 @@ public class SagaIntegrationTest {
                 primevalJson(),
                 saga(),
                 sagaNinio(),
-                exampleApplication(),
-        };
+                exampleApplication());
     }
 
     @Inject
