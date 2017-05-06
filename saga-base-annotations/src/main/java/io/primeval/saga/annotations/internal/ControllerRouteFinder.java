@@ -1,6 +1,8 @@
 package io.primeval.saga.annotations.internal;
 
-import java.lang.reflect.InvocationTargetException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
@@ -8,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -16,6 +19,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.util.promise.Promise;
 import org.osgi.util.promise.Promises;
 import org.slf4j.Logger;
@@ -33,6 +37,7 @@ import io.primeval.saga.annotations.PathParameter;
 import io.primeval.saga.annotations.QueryParameter;
 import io.primeval.saga.http.protocol.HttpRequest;
 import io.primeval.saga.http.shared.Payload;
+import io.primeval.saga.parameter.HttpParameterConverter;
 import io.primeval.saga.router.Route;
 import io.primeval.saga.router.RouterAction;
 import io.primeval.saga.serdes.serializer.Serializable;
@@ -43,6 +48,7 @@ public final class ControllerRouteFinder {
     private static final Logger LOGGER = LoggerFactory.getLogger(ControllerRouteFinder.class);
 
     private ControllerRouteProvider controllerRouteProvider;
+    private HttpParameterConverter httpParameterConverter;
 
     @Activate
     public void activate(BundleContext bundleContext) {
@@ -55,9 +61,17 @@ public final class ControllerRouteFinder {
         controllerRouteProvider.close();
     }
 
-    public ActionInvocationHandler createInvocationHandler(Method m, Object target,
-            Function<Object, Promise<Result<?>>> wrap, TypeTag resultTypeTag) {
+    @Reference
+    public void setHttpParamConverter(HttpParameterConverter httpParameterConverter) {
+        this.httpParameterConverter = httpParameterConverter;
+    }
 
+    public ActionInvocationHandler createInvocationHandler(Method m, Object target, List<String> routePattern,
+            Function<Object, Promise<Result<?>>> wrap, TypeTag resultTypeTag)
+            throws NoSuchMethodException, IllegalAccessException {
+
+        MethodHandle methodHandle = MethodHandles.publicLookup().findVirtual(m.getDeclaringClass(), m.getName(),
+                MethodType.methodType(m.getReturnType(), m.getParameterTypes())).bindTo(target);
         List<Function<Context, Promise<?>>> inject = new ArrayList<>(m.getParameterCount());
         for (Parameter parameter : m.getParameters()) {
 
@@ -81,7 +95,29 @@ public final class ControllerRouteFinder {
                 };
                 inject.add(fun);
             } else if (pp != null) {
-                throw new UnsupportedOperationException("TODO PathParameters");
+                // Auto-detect from param name
+                String paramName = pp.value().isEmpty() ? parameter.getName() : pp.value();
+
+                String expectedPattern = '{' + paramName + '}';
+
+                int patternIndex = findPatternIndex(routePattern, expectedPattern);
+
+                if (patternIndex == -1) {
+                    Function<Context, Promise<?>> fun = context -> {
+                        return Promises.failed(new NoSuchElementException("no such path parameter named " + paramName));
+                    };
+                    inject.add(fun);
+                } else {
+                    Function<Context, Promise<?>> fun = context -> {
+                        String paramValue = context.request().path.get(patternIndex);
+                        if (parameter.getType() == String.class) {
+                            return Promises.resolved(paramValue);
+                        }
+                        return httpParameterConverter.createParameter(paramValue,
+                                TypeTag.of(parameter.getParameterizedType()));
+                    };
+                    inject.add(fun);
+                }
             } else if (b != null) {
                 Function<Context, Promise<?>> fun = parameter.getType() == Payload.class
                         ? context -> Promises.resolved(context.body()) : context -> {
@@ -100,16 +136,25 @@ public final class ControllerRouteFinder {
                         .all(inject.stream().map(f -> f.apply(context)).collect(Collectors.toList()))
                         .flatMap(l -> PromiseHelper.wrap(() -> {
                             try {
-                                return m.invoke(target, l.toArray());
-                            } catch (InvocationTargetException e) {
-                                Throwable targetException = e.getCause();
-                                throw throwException(targetException);
+                                return methodHandle.invokeWithArguments(l);
+                            } catch (Throwable e) {
+                                throw throwException(e);
                             }
                         }))
                         .flatMap(res -> wrap.apply(res).map(r -> setType(r, resultTypeTag)));
             }
         };
 
+    }
+
+    private int findPatternIndex(List<String> pathPattern, String expectedPattern) {
+        for (int i = 0; i < pathPattern.size(); i++) {
+            String pattern = pathPattern.get(i);
+            if (expectedPattern.equals(pattern)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     @SuppressWarnings("unchecked")
@@ -172,8 +217,18 @@ public final class ControllerRouteFinder {
                 continue;
             }
 
+            List<String> routePattern = RouteUtils.path(basePath + routeAnn.uri());
+            List<String> routeURI = new ArrayList<>(routePattern.size());
+            for (String routeURIPart : routePattern) {
+                if (routeURIPart.startsWith("{") && routeURIPart.endsWith("}")) {
+                    routeURI.add(".*");
+                } else {
+                    routeURI.add(routeURIPart);
+                }
+            }
+
             Route route = new io.primeval.saga.router.Route(routeAnn.method(),
-                    RouteUtils.path(basePath + routeAnn.uri()));
+                    routeURI);
 
             Function<Object, Promise<Result<?>>> wrap;
             TypeTag resultTypeTag;
@@ -210,7 +265,8 @@ public final class ControllerRouteFinder {
             }
 
             try {
-                ActionInvocationHandler actionInvocationHandler = createInvocationHandler(m, controller, wrap,
+                ActionInvocationHandler actionInvocationHandler = createInvocationHandler(m, controller, routePattern,
+                        wrap,
                         resultTypeTag);
                 RouterAction boundAction = new RouterAction(route,
                         new Action(new MethodActionKey(m), actionInvocationHandler::invoke));

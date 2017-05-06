@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Collections;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -137,6 +138,11 @@ public class SagaIntegrationTest {
                 .withHeader(HeaderNames.ACCEPT, MimeTypes.JSON).exec().getValue();
         assertThat(emptyRespFluent.code).isEqualTo(Status.OK);
         assertThat(Flux.from(emptyRespFluent.payload.content).collectList().block()).isEmpty();
+
+        UUID randomUUID = UUID.randomUUID();
+        UUID actualUUID = httpClient.to("localhost", port).get("/location/" + randomUUID + "/foo").execMap(UUID.class)
+                .getValue();
+        assertThat(actualUUID).isEqualTo(randomUUID);
 
         httpServer.stop().getValue();
 

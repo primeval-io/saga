@@ -11,6 +11,10 @@ import io.primeval.saga.http.shared.Payload;
 
 public interface Context {
 
+    HttpRequest request();
+
+    Payload body();
+
     List<Optional<String>> queryParameter(String parameterName);
 
     // Use Optional<> if you want to make the parameter optional!
@@ -19,10 +23,6 @@ public interface Context {
     default <T> Promise<T> queryParameter(String parameterName, TypeTag<? extends T> typeTag) {
         return queryParameter(parameterName, typeTag, typeTag.getClassLoader());
     }
-    
-    HttpRequest request();
-
-    Payload body();
 
     <T> Promise<T> body(TypeTag<? extends T> typeTag, ClassLoader classLoader);
 
@@ -37,6 +37,5 @@ public interface Context {
     default <T> Promise<T> body(Class<? extends T> clazz) {
         return body(clazz, clazz.getClassLoader());
     }
-
 
 }

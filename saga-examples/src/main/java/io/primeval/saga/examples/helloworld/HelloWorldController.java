@@ -2,6 +2,7 @@ package io.primeval.saga.examples.helloworld;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -13,6 +14,7 @@ import io.primeval.codex.publisher.UnicastPublisher;
 import io.primeval.common.type.TypeTag;
 import io.primeval.saga.action.Result;
 import io.primeval.saga.annotations.Body;
+import io.primeval.saga.annotations.PathParameter;
 import io.primeval.saga.annotations.QueryParameter;
 import io.primeval.saga.annotations.Route;
 import io.primeval.saga.controller.Controller;
@@ -54,10 +56,15 @@ public final class HelloWorldController {
     public Result<List<String>> emptyResult() {
         return Result.create(Status.GONE);
     }
-    
+
     @Route(method = HttpMethod.GET, uri = "emptyFluent")
     public Void emptyFluent() {
         return null;
+    }
+
+    @Route(method = HttpMethod.GET, uri = "location/{uuid}/foo")
+    public UUID pathPattern(@PathParameter UUID uuid) {
+        return uuid;
     }
 
     @Route(method = HttpMethod.GET, uri = "ws")
