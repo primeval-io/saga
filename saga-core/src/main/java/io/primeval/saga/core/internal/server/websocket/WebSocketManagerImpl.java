@@ -113,7 +113,7 @@ public final class WebSocketManagerImpl implements WebSocketManager {
                 public Publisher<ByteBuffer> visitObject(T object) {
                     Promise<Payload> payloadPms = serDes.serializer().serialize(object, typeTag, MimeTypes.JSON,
                             Collections.emptyMap());
-                    return PromiseHelper.toMono(payloadPms).flatMap(payLoad -> {
+                    return PromiseHelper.toMono(payloadPms).flatMapMany(payLoad -> {
                         return outFrame(payLoad, false);
                     });
                 }
@@ -123,7 +123,7 @@ public final class WebSocketManagerImpl implements WebSocketManager {
                     Promise<Payload> payloadPms = serDes.serializer().serialize(text, TypeTag.of(String.class),
                             MimeTypes.TEXT,
                             Collections.singletonMap("charset", "utf-8"));
-                    return PromiseHelper.toMono(payloadPms).flatMap(payLoad -> {
+                    return PromiseHelper.toMono(payloadPms).flatMapMany(payLoad -> {
                         return outFrame(payLoad, true);
                     });
                 }
