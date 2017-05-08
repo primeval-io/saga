@@ -206,7 +206,7 @@ public final class HttpServerImpl implements HttpServer {
 
     public void rebuildRouteFilterProviders() {
         allRouteFilterProviders.set(ImmutableList.<RouteFilterProvider> builder().add(exceptionMappingFilterProvider)
-                .addAll(routeFilterProviders.get().values()).build());
+                .addAll(routeFilterProviders.get().values()).add(exceptionMappingFilterProvider).build());
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
