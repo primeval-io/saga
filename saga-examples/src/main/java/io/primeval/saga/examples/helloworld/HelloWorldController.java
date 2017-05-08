@@ -10,6 +10,7 @@ import org.osgi.util.promise.Promise;
 
 import com.google.common.collect.ImmutableList;
 
+import io.primeval.codex.io.resource.ReactiveResourceReader;
 import io.primeval.codex.publisher.UnicastPublisher;
 import io.primeval.common.type.TypeTag;
 import io.primeval.saga.action.Result;
@@ -18,6 +19,7 @@ import io.primeval.saga.annotations.PathParameter;
 import io.primeval.saga.annotations.QueryParameter;
 import io.primeval.saga.annotations.Route;
 import io.primeval.saga.controller.Controller;
+import io.primeval.saga.guava.ImmutableResult;
 import io.primeval.saga.http.protocol.HttpMethod;
 import io.primeval.saga.http.protocol.HttpRequest;
 import io.primeval.saga.http.protocol.Status;
@@ -33,6 +35,9 @@ public final class HelloWorldController {
 
     @Reference
     private WebSocketManager webSocketManager;
+
+    @Reference
+    public ReactiveResourceReader reactiveResourceReader;
 
     @Route(method = HttpMethod.GET, uri = "hello")
     public String hello(@QueryParameter String who) {
@@ -65,6 +70,16 @@ public final class HelloWorldController {
     @Route(method = HttpMethod.GET, uri = "location/{uuid}/foo")
     public UUID pathPattern(@PathParameter UUID uuid) {
         return uuid;
+    }
+
+    @Route(method = HttpMethod.GET, uri = "lenna.png")
+    public Promise<Result<Payload>> lenna() throws Exception {
+        return reactiveResourceReader.readResource(HelloWorldController.class, "Lenna.png")
+                .map(rf -> {
+                    return ImmutableResult
+                            .ok(Payload.ofLength(rf.length(), rf.autoCloseContent()))
+                            .contentType("image/png").build();
+                });
     }
 
     @Route(method = HttpMethod.GET, uri = "ws")

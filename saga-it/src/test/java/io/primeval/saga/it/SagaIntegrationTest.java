@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
 
@@ -31,6 +32,8 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -48,6 +51,8 @@ import reactor.core.publisher.Flux;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class SagaIntegrationTest {
+
+    public static final Logger LOGGER = LoggerFactory.getLogger(SagaIntegrationTest.class);
 
     public static Option exampleApplication() {
         return composite(dsAndFriends(),
@@ -107,6 +112,7 @@ public class SagaIntegrationTest {
 
         int port = httpServer.start(findRandomOpenPortOnAllLocalInterfaces()).flatMap(x -> httpServer.port())
                 .getValue();
+        LOGGER.info("Starting Saga server on port {}", port);
 
         String response = httpClient.to("localhost", port).get("/hello?who=World").execMap(String.class).getValue();
 
@@ -144,8 +150,16 @@ public class SagaIntegrationTest {
                 .getValue();
         assertThat(actualUUID).isEqualTo(randomUUID);
 
+        if (Boolean.getBoolean("KEEP_SAGA_UP")) {
+            keepTestsUp();
+        }
         httpServer.stop().getValue();
 
+    }
+
+    private void keepTestsUp() throws InterruptedException {
+        CountDownLatch cd = new CountDownLatch(1);
+        cd.await();
     }
 
     private Integer findRandomOpenPortOnAllLocalInterfaces() throws IOException {
