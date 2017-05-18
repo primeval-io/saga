@@ -1,5 +1,13 @@
 package io.primeval.saga.ninio.internal.server;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+import org.osgi.util.promise.Deferred;
+import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.davfx.ninio.core.Address;
 import com.davfx.ninio.http.HttpContentReceiver;
 import com.davfx.ninio.http.HttpContentSender;
@@ -11,29 +19,23 @@ import com.davfx.ninio.http.HttpResponse;
 import com.davfx.ninio.http.HttpStatus;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Longs;
+
 import io.primeval.saga.http.server.spi.HttpServerEvent;
 import io.primeval.saga.http.shared.Payload;
 import io.primeval.saga.ninio.internal.ContentReceiver;
 import io.primeval.saga.ninio.internal.ContentSender;
 import io.primeval.saga.ninio.internal.NinioSagaShared;
-import org.osgi.util.promise.Deferred;
-import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import reactor.core.publisher.BlockingSink;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import reactor.core.publisher.FluxSink;
 
 public final class SagaHttpListeningHandler implements HttpListeningHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(SagaHttpListeningHandler.class);
 
-    private final BlockingSink<HttpServerEvent> eventSink;
+    private final FluxSink<HttpServerEvent> eventSink;
 
     private final Deferred<Void> startedDeferred;
     private final Deferred<Void> closedDeferred;
 
-    public SagaHttpListeningHandler(BlockingSink<HttpServerEvent> sink, Deferred<Void> startedDeferred,
+    public SagaHttpListeningHandler(FluxSink<HttpServerEvent> sink, Deferred<Void> startedDeferred,
                                     Deferred<Void> closedDeferred) {
         this.eventSink = sink;
         this.startedDeferred = startedDeferred;
@@ -95,7 +97,7 @@ public final class SagaHttpListeningHandler implements HttpListeningHandler {
                 return sagaRequest;
             }
         };
-        eventSink.accept(incomingHttpRequest);
+        eventSink.next(incomingHttpRequest);
 
         return contentReceiver;
     }

@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -17,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
 
@@ -28,16 +30,18 @@ import io.primeval.saga.http.server.HttpServer;
 import io.primeval.saga.http.server.spi.HttpServerEvent;
 import io.primeval.saga.http.server.spi.HttpServerProvider;
 import io.primeval.saga.http.shared.provider.ProviderProperties;
+import io.primeval.saga.interception.request.RequestInterceptor;
 import io.primeval.saga.parameter.HttpParameterConverter;
 import io.primeval.saga.router.Router;
-import io.primeval.saga.router.filter.RouteFilterProvider;
 import io.primeval.saga.serdes.deserializer.Deserializer;
 import io.primeval.saga.serdes.serializer.Serializer;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
-@Component
+@Component(configurationPid = HttpServerImpl.SAGA_SERVER)
 public final class HttpServerImpl implements HttpServer {
+
+    public static final String SAGA_SERVER = "saga.server";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServerImpl.class);
 
@@ -61,20 +65,35 @@ public final class HttpServerImpl implements HttpServer {
 
     private HttpServerEventHandler httpServerEventHandler;
 
-    private AtomicReference<SortedMap<Orderer<RouteFilterProvider>, RouteFilterProvider>> routeFilterProviders = new AtomicReference<>(
+    private AtomicReference<SortedMap<Orderer<RequestInterceptor>, RequestInterceptor>> routeFilterProviders = new AtomicReference<>(
             ImmutableSortedMap.of());
 
-    private AtomicReference<ImmutableList<RouteFilterProvider>> allRouteFilterProviders = new AtomicReference<>(
+    private AtomicReference<ImmutableList<RequestInterceptor>> allRouteFilterProviders = new AtomicReference<>(
             ImmutableList.of());
+
+    private AtomicReference<ImmutableSet<String>> excludeFromCompression = new AtomicReference<>(
+            ImmutableSet.of());
 
     private ExceptionMappingFilterProvider exceptionMappingFilterProvider;
 
     @Activate
-    public void activate() {
+    public void activate(SagaServerConfig config) {
         httpServerEventHandler = new HttpServerEventHandler(dispatcher, router, this::currentFilterProviders,
                 serializer,
                 deserializer,
-                paramConverter);
+                paramConverter, excludeFromCompression::get);
+        applyConfig(config);
+    }
+
+
+    @Modified
+    public void updated(SagaServerConfig config) {
+        applyConfig(config);
+    }
+    
+    
+    private void applyConfig(SagaServerConfig config) {
+        excludeFromCompression.set(ImmutableSet.copyOf(config.excludeFromCompression()));
     }
 
     @Override
@@ -174,21 +193,22 @@ public final class HttpServerImpl implements HttpServer {
         this.scheduler = scheduler;
     }
 
-    public Collection<RouteFilterProvider> currentFilterProviders() {
+    public Collection<RequestInterceptor> currentFilterProviders() {
         return allRouteFilterProviders.get();
     }
 
     @Reference
     public void setExceptionMappingFilterProvider(ExceptionMappingFilterProvider exceptionMappingFilterProvider) {
         this.exceptionMappingFilterProvider = exceptionMappingFilterProvider;
-        rebuildRouteFilterProviders();;
+        rebuildRouteFilterProviders();
+        ;
     }
 
-    public void addRouteFilterProvider(RouteFilterProvider routeFilterProvider,
-            Orderer<RouteFilterProvider> orderer) {
+    public void addRouteFilterProvider(RequestInterceptor routeFilterProvider,
+            Orderer<RequestInterceptor> orderer) {
         routeFilterProviders.getAndUpdate(current -> {
             return ImmutableSortedMap
-                    .<Orderer<RouteFilterProvider>, RouteFilterProvider> naturalOrder()
+                    .<Orderer<RequestInterceptor>, RequestInterceptor> naturalOrder()
                     .put(orderer, routeFilterProvider)
                     .putAll(current)
                     .build();
@@ -196,8 +216,8 @@ public final class HttpServerImpl implements HttpServer {
         rebuildRouteFilterProviders();
     }
 
-    public void removeRouteFilterProvider(RouteFilterProvider routeFilterProvider,
-            Orderer<RouteFilterProvider> orderer) {
+    public void removeRouteFilterProvider(RequestInterceptor routeFilterProvider,
+            Orderer<RequestInterceptor> orderer) {
         routeFilterProviders.getAndUpdate(current -> {
             return ImmutableSortedMap.copyOf(Maps.filterKeys(current, key -> key.compareTo(orderer) != 0));
         });
@@ -205,21 +225,21 @@ public final class HttpServerImpl implements HttpServer {
     }
 
     public void rebuildRouteFilterProviders() {
-        allRouteFilterProviders.set(ImmutableList.<RouteFilterProvider> builder().add(exceptionMappingFilterProvider)
+        allRouteFilterProviders.set(ImmutableList.<RequestInterceptor> builder().add(exceptionMappingFilterProvider)
                 .addAll(routeFilterProviders.get().values()).add(exceptionMappingFilterProvider).build());
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    public void addRouteFilterProvider(RouteFilterProvider routeFilterProvider,
-            ServiceReference<RouteFilterProvider> ref) {
-        ServiceReferenceOrderer<RouteFilterProvider> referenceOrderer = new ServiceReferenceOrderer<RouteFilterProvider>(
+    public void addRouteFilterProvider(RequestInterceptor routeFilterProvider,
+            ServiceReference<RequestInterceptor> ref) {
+        ServiceReferenceOrderer<RequestInterceptor> referenceOrderer = new ServiceReferenceOrderer<RequestInterceptor>(
                 routeFilterProvider, ref);
         addRouteFilterProvider(routeFilterProvider, referenceOrderer);
     }
 
-    public void removeRouteFilterProvider(RouteFilterProvider routeFilterProvider,
-            ServiceReference<RouteFilterProvider> ref) {
-        ServiceReferenceOrderer<RouteFilterProvider> referenceOrderer = new ServiceReferenceOrderer<RouteFilterProvider>(
+    public void removeRouteFilterProvider(RequestInterceptor routeFilterProvider,
+            ServiceReference<RequestInterceptor> ref) {
+        ServiceReferenceOrderer<RequestInterceptor> referenceOrderer = new ServiceReferenceOrderer<RequestInterceptor>(
                 routeFilterProvider, ref);
         removeRouteFilterProvider(routeFilterProvider, referenceOrderer);
 

@@ -86,6 +86,13 @@ public final class TestProvisioningConfig {
                 mavenBundle("io.primeval", "primeval-codex").versionAsInProject());
     }
 
+    public static Option primevalCompendium() {
+        return composite(
+                mavenBundle("com.sun.mail", "javax.mail", "1.5.6"),
+                mavenBundle("io.primeval.compendium", "primeval-cmpn-i18n", "1.0.0-SNAPSHOT"),
+                mavenBundle("io.primeval.compendium", "primeval-cmpn-email", "1.0.0-SNAPSHOT"));
+    }
+
     public static Option primevalJson() {
         return composite(mavenBundle("io.primeval", "primeval-json").versionAsInProject(),
                 mavenBundle("io.primeval", "primeval-jackson-guava18", "1.0.0-SNAPSHOT"),
@@ -93,11 +100,26 @@ public final class TestProvisioningConfig {
                 mavenBundle("io.primeval", "primeval-json-jackson").versionAsInProject());
     }
 
+    public static Option primevalReflexAndAspecio() {
+        return composite(mavenBundle("org.ow2.asm", "asm").version("5.2"),
+                mavenBundle("io.primeval", "primeval-reflex", "1.0.0-SNAPSHOT"),
+                mavenBundle("io.primeval.aspecio", "aspecio-core", "2.0.0-SNAPSHOT"));
+    }
+
     public static Option saga() {
         return composite(mavenBundle("io.primeval.saga", "saga-api").versionAsInProject(),
                 mavenBundle("io.primeval.saga", "saga-guava").versionAsInProject(),
                 mavenBundle("io.primeval.saga", "saga-core").versionAsInProject(),
                 mavenBundle("io.primeval.saga", "saga-base-annotations").versionAsInProject());
+    }
+
+    public static Option sagaThymeleaf() {
+        return composite(mavenBundle("org.unbescape", "unbescape", "1.1.4.RELEASE"),
+                mavenBundle("org.attoparser", "attoparser", "2.0.4.RELEASE"),
+                mavenBundle("org.javassist", "javassist", "3.22.0-CR1"),
+                mavenBundle("org.apache.servicemix.bundles", "org.apache.servicemix.bundles.ognl", "3.2.1_1"),
+                mavenBundle("io.primeval.saga", "saga-thymeleaf").versionAsInProject(),
+                mavenBundle("io.primeval.saga", "saga-templating").versionAsInProject());
     }
 
     public static Option sagaNinio() {

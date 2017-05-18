@@ -14,6 +14,11 @@ public final class MethodActionKey extends ActionKey {
     public MethodActionKey(Method method) {
         this.method = method;
     }
+    
+    @Override
+    public ClassLoader classLoader() {
+        return method.getDeclaringClass().getClassLoader();
+    }
 
     @Override
     public String repr() {

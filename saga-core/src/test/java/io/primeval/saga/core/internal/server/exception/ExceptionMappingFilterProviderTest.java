@@ -147,7 +147,7 @@ public class ExceptionMappingFilterProviderTest {
     @Test
     public void testRecovery() throws Exception {
 
-        Promise<Result<?>> promise = tested.call(fakeContext,
+        Promise<Result<?>> promise = tested.onRequest(fakeContext,
                 ctx -> Promises.failed(new NoSuchElementException("Not found")),
                 Optional.empty());
 
@@ -159,7 +159,7 @@ public class ExceptionMappingFilterProviderTest {
 
     @Test
     public void testRecoveryInheritance() throws Exception {
-        Promise<Result<?>> promise = tested.call(fakeContext,
+        Promise<Result<?>> promise = tested.onRequest(fakeContext,
                 ctx -> Promises.failed(new NoSuchFruitException("banana")),
                 Optional.empty());
 
@@ -170,7 +170,7 @@ public class ExceptionMappingFilterProviderTest {
 
     @Test
     public void testRethrow() throws Exception {
-        Promise<Result<?>> promise = tested.call(fakeContext, ctx -> Promises.failed(new RuntimeException("boom")),
+        Promise<Result<?>> promise = tested.onRequest(fakeContext, ctx -> Promises.failed(new RuntimeException("boom")),
                 Optional.empty());
 
         Result<?> result = promise.getValue();

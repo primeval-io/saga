@@ -61,6 +61,12 @@
 			<version>${project.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>io.primeval.saga</groupId>
+			<artifactId>saga-thymeleaf</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
 
 
 		<!-- TEST -->

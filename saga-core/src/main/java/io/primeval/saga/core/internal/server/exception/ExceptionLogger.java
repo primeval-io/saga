@@ -21,7 +21,7 @@ public final class ExceptionLogger implements ExceptionRecoveryProvider<Throwabl
 
     @Override
     public Promise<Result<?>> recover(Throwable exception, Context context, Optional<Route> boundRoute) {
-        LOGGER.debug("Error on route: {}", context.request().uri, exception);
+        LOGGER.error("Error on route: {}", context.request().uri, exception);
         return null; // Do not change result
     }
 

@@ -19,7 +19,7 @@ import io.primeval.saga.http.server.spi.HttpServerEvent;
 import io.primeval.saga.http.server.spi.HttpServerProvider;
 import io.primeval.saga.http.shared.provider.SagaProvider;
 import io.primeval.saga.ninio.internal.NinioSagaShared;
-import reactor.core.publisher.BlockingSink;
+import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.UnicastProcessor;
 
 @Component
@@ -38,7 +38,7 @@ public final class NinioHttpServerProvider implements HttpServerProvider {
 
     private UnicastProcessor<HttpServerEvent> emitter;
 
-    private BlockingSink<HttpServerEvent> sink;
+    private FluxSink<HttpServerEvent> sink;
 
     private int port = -1;
 
@@ -64,7 +64,7 @@ public final class NinioHttpServerProvider implements HttpServerProvider {
         closedDeferred = new Deferred<>();
 
         emitter = UnicastProcessor.create();
-        this.sink = emitter.connectSink();
+        this.sink = emitter.sink();
 
         ninio = Ninio.create();
         tcp = ninio.create(TcpSocketServer.builder().bind(new Address(Address.ANY, port)));

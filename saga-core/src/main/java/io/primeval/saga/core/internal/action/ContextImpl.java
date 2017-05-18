@@ -36,7 +36,12 @@ public final class ContextImpl implements Context {
 
     @Override
     public List<Optional<String>> queryParameter(String parameterName) {
-        return event.request().parameters.get(parameterName);
+        List<Optional<String>> list = event.request().parameters.get(parameterName);
+        if (list != null) {
+            return list;
+        } else {
+            return ImmutableList.of();
+        }
     }
 
     @Override
@@ -53,8 +58,7 @@ public final class ContextImpl implements Context {
             ImmutableList.Builder builder = ImmutableList.builder();
             if (queryParameter != null) {
                 for (Optional<String> queryParameterValue : queryParameter) {
-                    queryParameterValue.ifPresent(s ->
-                            builder.add(paramConverter.createParameter(s, wantedType)));
+                    queryParameterValue.ifPresent(s -> builder.add(paramConverter.createParameter(s, wantedType)));
                 }
             }
             return PromiseHelper.allSuccessful(builder.build());
@@ -80,7 +84,8 @@ public final class ContextImpl implements Context {
                     }
                 } else {
                     if (required) {
-                        return Promises.failed(new HttpParameterConvertingException("missing parameter: " + parameterName));
+                        return Promises
+                                .failed(new HttpParameterConvertingException("missing parameter: " + parameterName));
                     } else {
                         return Promises.resolved((T) Optional.empty());
                     }

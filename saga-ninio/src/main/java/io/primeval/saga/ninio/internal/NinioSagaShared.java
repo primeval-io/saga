@@ -3,7 +3,6 @@ package io.primeval.saga.ninio.internal;
 import java.util.List;
 import java.util.Map;
 
-import com.davfx.ninio.http.HttpHeaderKey;
 import com.davfx.ninio.http.HttpRequest;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -73,7 +72,6 @@ public final class NinioSagaShared {
             Payload payload) {
         ImmutableListMultimap.Builder<String, String> headerBldr = ImmutableListMultimap.builder();
         headers.entrySet().forEach(e -> headerBldr.putAll(e.getKey(), e.getValue()));
-        payload.contentLength.ifPresent(cl -> headerBldr.put(HttpHeaderKey.CONTENT_LENGTH, String.valueOf(cl)));
         ImmutableListMultimap<String, String> ninioHeaders = headerBldr.build();
         return ninioHeaders;
     }

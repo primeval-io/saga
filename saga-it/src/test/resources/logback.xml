@@ -11,10 +11,10 @@
 	</root>
 
 	<!-- Logger configuration -->
-	
-	<logger name="io.lambdacube.saga" level="ERROR" />
-	 <logger name="com.davfx.ninio" level="ERROR" />
-	<logger name="io.lambdacube" level="INFO" />
+
+	<logger name="io.primeval.saga" level="INFO" />
+	<logger name="com.davfx.ninio" level="ERROR" />
+	<logger name="io.primeval" level="INFO" />
 	<logger name="ch.qos.logback" level="WARN" />
 
 	<!-- Pax-Exam configuration -->

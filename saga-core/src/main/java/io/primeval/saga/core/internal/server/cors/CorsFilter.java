@@ -28,12 +28,12 @@ import io.primeval.saga.http.protocol.HeaderNames;
 import io.primeval.saga.http.protocol.HttpMethod;
 import io.primeval.saga.http.protocol.HttpRequest;
 import io.primeval.saga.http.protocol.HttpUtils;
+import io.primeval.saga.interception.request.RequestInterceptor;
 import io.primeval.saga.router.Route;
 import io.primeval.saga.router.Router;
-import io.primeval.saga.router.filter.RouteFilterProvider;
 
 @Component(configurationPid = "saga.cors.filter", configurationPolicy = ConfigurationPolicy.REQUIRE)
-public final class CorsFilter implements RouteFilterProvider {
+public final class CorsFilter implements RequestInterceptor {
 
     private static final Pattern PATTERN = Pattern.compile(".*");
 
@@ -52,7 +52,7 @@ public final class CorsFilter implements RouteFilterProvider {
     }
 
     @Override
-    public Promise<Result<?>> call(Context context, ActionFunction actionFunction, Optional<Route> boundRoute) {
+    public Promise<Result<?>> onRequest(Context context, ActionFunction actionFunction, Optional<Route> boundRoute) {
         // Is CORS required?
         List<String> originHeaders = context.request().headers.get(HeaderNames.ORIGIN);
 
@@ -140,7 +140,7 @@ public final class CorsFilter implements RouteFilterProvider {
         // Is it actually a CORS request?
         if (originHeader != null) {
             resultPms = resultPms.map(result -> {
-                ImmutableResult.Builder resBuilder = ImmutableResult.copyOf(result);
+                ImmutableResult.Builder resBuilder = ImmutableResult.copySetupAndContentOf(result);
                 String allowedHosts = getAllowedHostsHeader(originHeader);
                 resBuilder = resBuilder.withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, allowedHosts);
                 if (config.allow_credentials()) {

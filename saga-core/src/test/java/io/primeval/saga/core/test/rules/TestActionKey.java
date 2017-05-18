@@ -31,4 +31,8 @@ public final class TestActionKey extends ActionKey {
         return Objects.hash(name);
     }
 
+    @Override
+    public ClassLoader classLoader() {
+        return TestActionKey.class.getClassLoader();
+    }
 }

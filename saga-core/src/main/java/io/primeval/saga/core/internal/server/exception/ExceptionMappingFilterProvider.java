@@ -27,14 +27,14 @@ import io.primeval.saga.action.Context;
 import io.primeval.saga.action.Result;
 import io.primeval.saga.core.internal.server.Orderer;
 import io.primeval.saga.core.internal.server.ServiceReferenceOrderer;
+import io.primeval.saga.interception.request.RequestInterceptor;
 import io.primeval.saga.router.Route;
 import io.primeval.saga.router.exception.ExceptionRecovery;
 import io.primeval.saga.router.exception.ExceptionRecoveryProvider;
-import io.primeval.saga.router.filter.RouteFilterProvider;
 
 // Separate injection to guarantee FIRST position.
 @Component(immediate = true, service = ExceptionMappingFilterProvider.class)
-public final class ExceptionMappingFilterProvider implements RouteFilterProvider {
+public final class ExceptionMappingFilterProvider implements RequestInterceptor {
 
     private final Map<Class<? extends Throwable>, AtomicReference<SortedMap<Orderer<ExceptionRecoveryProvider<?>>, ExceptionRecovery<?>>>> mappers = Maps
             .newConcurrentMap();
@@ -42,7 +42,7 @@ public final class ExceptionMappingFilterProvider implements RouteFilterProvider
             .of();
 
     @Override
-    public Promise<Result<?>> call(Context context, ActionFunction function, Optional<Route> boundRoute) {
+    public Promise<Result<?>> onRequest(Context context, ActionFunction function, Optional<Route> boundRoute) {
         return PromiseHelper.wrapPromise(() -> function.apply(context))
                 .recoverWith(p -> handleRecovery(PromiseHelper.getFailure(p), context, boundRoute));
 

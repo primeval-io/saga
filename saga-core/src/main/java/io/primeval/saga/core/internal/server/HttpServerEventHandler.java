@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 
@@ -35,12 +37,12 @@ import io.primeval.saga.http.protocol.HttpResponse;
 import io.primeval.saga.http.protocol.Status;
 import io.primeval.saga.http.server.spi.HttpServerEvent;
 import io.primeval.saga.http.shared.Payload;
+import io.primeval.saga.interception.request.RequestInterceptor;
 import io.primeval.saga.parameter.HttpParameterConverter;
 import io.primeval.saga.renderer.MimeTypes;
 import io.primeval.saga.router.Route;
 import io.primeval.saga.router.Router;
 import io.primeval.saga.router.RouterAction;
-import io.primeval.saga.router.filter.RouteFilterProvider;
 import io.primeval.saga.serdes.deserializer.Deserializer;
 import io.primeval.saga.serdes.serializer.Serializable;
 import io.primeval.saga.serdes.serializer.Serializer;
@@ -55,19 +57,21 @@ public final class HttpServerEventHandler {
     private final Deserializer deserializer;
     private final HttpParameterConverter paramConverter;
 
-    private final Supplier<Collection<RouteFilterProvider>> routeFilterProviders;
+    private final Supplier<Collection<RequestInterceptor>> routeFilterProviders;
+    private final Supplier<ImmutableSet<String>> excludeFromCompression;
 
     public HttpServerEventHandler(Dispatcher dispatcher, Router router,
-            Supplier<Collection<RouteFilterProvider>> routeFilterProviders,
+            Supplier<Collection<RequestInterceptor>> routeFilterProviders,
             Serializer serializer,
             Deserializer deserializer,
-            HttpParameterConverter paramConverter) {
+            HttpParameterConverter paramConverter, Supplier<ImmutableSet<String>> excludeFromCompression) {
         this.dispatcher = dispatcher;
         this.router = router;
         this.routeFilterProviders = routeFilterProviders;
         this.serializer = serializer;
         this.deserializer = deserializer;
         this.paramConverter = paramConverter;
+        this.excludeFromCompression = excludeFromCompression;
     }
 
     public Promise<Action> getAction(HttpServerEvent event) {
@@ -77,9 +81,9 @@ public final class HttpServerEventHandler {
 
         Promise<Optional<RouterAction>> routerActionPms = router.getActionFor(request.method.name(), path);
 
-        Collection<RouteFilterProvider> filters = routeFilterProviders.get();
+        Collection<RequestInterceptor> filters = routeFilterProviders.get();
 
-        List<RouteFilterProvider> activeFilters = Lists.reverse(filters.stream()
+        List<RequestInterceptor> activeFilters = Lists.reverse(filters.stream()
                 .filter(f -> f.matches(request.uri)).collect(Collectors.toList()));
 
         return routerActionPms.map(routerAction -> {
@@ -97,10 +101,10 @@ public final class HttpServerEventHandler {
                 fun = ra.function;
             }
 
-            for (RouteFilterProvider f : activeFilters) {
+            for (RequestInterceptor f : activeFilters) {
                 ActionFunction nextFun = fun;
                 fun = context -> {
-                    return f.call(context, nextFun, boundRoute);
+                    return f.onRequest(context, nextFun, boundRoute);
                 };
             }
             return new Action(actionKey, fun);
@@ -158,7 +162,7 @@ public final class HttpServerEventHandler {
                                     if (result.headers().containsKey(HeaderNames.CONTENT_TYPE)) {
                                         r = result;
                                     } else {
-                                        r = ImmutableResult.copyOf(result)
+                                        r = ImmutableResult.copySetupAndContentOf(result)
                                                 .withHeader(HeaderNames.CONTENT_TYPE, contentType.repr()).build();
                                     }
                                     return payloadPms
@@ -180,11 +184,29 @@ public final class HttpServerEventHandler {
         PromiseHelper.onResolve(payloadResPms, payloadRes -> {
 
             Payload payload = payloadRes.payload;
-            HttpResponse response = new HttpResponse(payloadRes.status, "", payloadRes.headers);
+
+            Map<String, List<String>> headers = payloadRes.headers;
+            if (payload.contentLength.isPresent()) {
+                long cl = payload.contentLength.getAsLong();
+                String mimeType = SagaCoreUtils.determineContentType(payloadRes.headers).map(ct -> ct.mediaType)
+                        .orElse(MimeTypes.BINARY);
+
+                if (excludeFromCompression.get().contains(mimeType)) {
+
+                    Iterable<Map.Entry<String, List<String>>> it = payloadRes.headers.entrySet().stream()
+                            .filter(e -> !e.getKey().equals(HeaderNames.CONTENT_LENGTH))::iterator;
+                    headers = ImmutableMap.<String, List<String>> builder()
+                            .putAll(it)
+                            .put(HeaderNames.CONTENT_LENGTH, Collections.singletonList(String.valueOf(cl))).build();
+                }
+            }
+            HttpResponse response = new HttpResponse(payloadRes.status, "", headers);
 
             event.respond(response, payload);
 
-        }, failure -> {
+        }, failure ->
+
+        {
             LOGGER.error("Could not send result", failure);
         });
 

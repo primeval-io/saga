@@ -63,15 +63,20 @@ public class ImmutableResult<T> implements Result<T> {
         return Result.equals(this, that);
     }
 
-    public static <T> Builder<T> copyOf(Result<T> result) {
-        ArrayListMultimap<String, String> headers = ArrayListMultimap.create();
-        result.headers().forEach((k, v) -> headers.putAll(k, v));
-        Builder<T> builder = new Builder<T>().withStatusCode(result.statusCode())
-                .withHeaders(headers);
+    public static <T> Builder<T> copySetupAndContentOf(Result<T> result) {
+        Builder<T> builder = copySetupOf(result);
         result.content().ifPresent(content -> {
             builder.setValue(content.value());
             content.explicitTypeTag().ifPresent(t -> builder.withExplicitType(t));
         });
+        return builder;
+    }
+
+    public static <T> Builder<T> copySetupOf(Result<?> result) {
+        ArrayListMultimap<String, String> headers = ArrayListMultimap.create();
+        result.headers().forEach((k, v) -> headers.putAll(k, v));
+        Builder<T> builder = new Builder<T>().withStatusCode(result.statusCode())
+                .withHeaders(headers);
         return builder;
     }
 

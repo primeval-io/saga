@@ -5,9 +5,12 @@ import static io.primeval.saga.it.TestProvisioningConfig.dsAndFriends;
 import static io.primeval.saga.it.TestProvisioningConfig.extraSnapshotRepository;
 import static io.primeval.saga.it.TestProvisioningConfig.ninio;
 import static io.primeval.saga.it.TestProvisioningConfig.primevalCommonsAndCodex;
+import static io.primeval.saga.it.TestProvisioningConfig.primevalCompendium;
 import static io.primeval.saga.it.TestProvisioningConfig.primevalJson;
+import static io.primeval.saga.it.TestProvisioningConfig.primevalReflexAndAspecio;
 import static io.primeval.saga.it.TestProvisioningConfig.saga;
 import static io.primeval.saga.it.TestProvisioningConfig.sagaNinio;
+import static io.primeval.saga.it.TestProvisioningConfig.sagaThymeleaf;
 import static io.primeval.saga.it.TestProvisioningConfig.slf4jLogging;
 import static io.primeval.saga.it.TestProvisioningConfig.testingBundles;
 import static org.ops4j.pax.exam.CoreOptions.composite;
@@ -19,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
@@ -31,6 +35,7 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,8 +75,11 @@ public class SagaIntegrationTest {
                 slf4jLogging(),
                 ninio(),
                 primevalCommonsAndCodex(),
+                primevalCompendium(),
+                primevalReflexAndAspecio(),
                 primevalJson(),
                 saga(),
+                sagaThymeleaf(),
                 sagaNinio(),
                 exampleApplication());
     }
@@ -81,6 +89,9 @@ public class SagaIntegrationTest {
 
     @Inject
     ServiceComponentRuntime scr;
+
+    @Inject
+    ConfigurationAdmin configAdmin;
 
     @Inject
     HttpServer httpServer;
@@ -95,8 +106,7 @@ public class SagaIntegrationTest {
     // @Ignore
     public void someTest() throws Exception {
 
-        // System.out.println(mtd);
-        //
+        // BundleContext bundleContext = FrameworkUtil.getBundle(SagaIntegrationTest.class).getBundleContext();
         // Collection<ComponentDescriptionDTO> componentDescriptionDTOs = scr
         // .getComponentDescriptionDTOs(bundleContext.getBundles());
         //
@@ -110,6 +120,17 @@ public class SagaIntegrationTest {
         // System.out.println(bundle.getSymbolicName() + " " + bundle.getVersion());
         // });
 
+        Hashtable<String, Object> corsConfig = new Hashtable<>();
+        corsConfig.put("allowed.hosts", "*");
+        corsConfig.put("max.age", 86400);
+        corsConfig.put("exposed.headers", new String[0]);
+        configAdmin.getConfiguration("saga.cors.filter", "?").update(corsConfig);
+
+        Hashtable<String, Object> i18nConfig = new Hashtable<>();
+        i18nConfig.put("defaultLocale", "en");
+        i18nConfig.put("supportedLocales", ImmutableList.of("en", "fr"));
+        configAdmin.getConfiguration("primeval.compendium.i18n", "?").update(i18nConfig);
+        
         int port = httpServer.start(findRandomOpenPortOnAllLocalInterfaces()).flatMap(x -> httpServer.port())
                 .getValue();
         LOGGER.info("Starting Saga server on port {}", port);

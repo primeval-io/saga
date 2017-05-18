@@ -30,5 +30,10 @@ public final class DefaultActionKey extends ActionKey {
     public int hashCode() {
         return Objects.hash(name);
     }
+    
+    @Override
+    public ClassLoader classLoader() {
+        return DefaultActionKey.class.getClassLoader();
+    }
 
 }

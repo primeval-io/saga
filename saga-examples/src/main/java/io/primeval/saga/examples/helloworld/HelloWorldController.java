@@ -18,12 +18,14 @@ import io.primeval.saga.annotations.Body;
 import io.primeval.saga.annotations.PathParameter;
 import io.primeval.saga.annotations.QueryParameter;
 import io.primeval.saga.annotations.Route;
+import io.primeval.saga.annotations.ext.ContentType;
 import io.primeval.saga.controller.Controller;
 import io.primeval.saga.guava.ImmutableResult;
 import io.primeval.saga.http.protocol.HttpMethod;
 import io.primeval.saga.http.protocol.HttpRequest;
 import io.primeval.saga.http.protocol.Status;
 import io.primeval.saga.http.shared.Payload;
+import io.primeval.saga.renderer.MimeTypes;
 import io.primeval.saga.websocket.WebSocket;
 import io.primeval.saga.websocket.WebSocketManager;
 import io.primeval.saga.websocket.message.WebSocketMessage;
@@ -70,6 +72,17 @@ public final class HelloWorldController {
     @Route(method = HttpMethod.GET, uri = "location/{uuid}/foo")
     public UUID pathPattern(@PathParameter UUID uuid) {
         return uuid;
+    }
+
+    @Route(method = HttpMethod.GET, uri = "error")
+    public void errorTest() {
+        throw new IllegalStateException("I failed");
+    }
+
+    @Route(method = HttpMethod.GET, uri = "intercepted")
+    @ContentType(MimeTypes.HTML)
+    public String intercepted() {
+        return "Foo";
     }
 
     @Route(method = HttpMethod.GET, uri = "lenna.png")

@@ -1,6 +1,7 @@
 package io.primeval.saga.core.test.rules;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.net.ServerSocket;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
@@ -13,9 +14,11 @@ import io.primeval.codex.test.rules.WithCodex;
 import io.primeval.common.test.rules.TestResource;
 import io.primeval.saga.core.internal.parameter.HttpParameterConverterImpl;
 import io.primeval.saga.core.internal.server.HttpServerImpl;
+import io.primeval.saga.core.internal.server.SagaServerConfig;
 import io.primeval.saga.http.server.spi.HttpServerProvider;
 import io.primeval.saga.http.shared.provider.ProviderProperties;
 import io.primeval.saga.http.shared.provider.SagaProvider;
+import io.primeval.saga.renderer.MimeTypes;
 import io.primeval.saga.router.Router;
 
 public class WithHttpServer extends ExternalResource implements TestResource {
@@ -59,7 +62,18 @@ public class WithHttpServer extends ExternalResource implements TestResource {
             httpServer.setHttpServerProvider(httpServerProvider, new ProviderProperties(sagaProvider.name()));
         }
 
-        httpServer.activate();
+        httpServer.activate(new SagaServerConfig() {
+            
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return SagaServerConfig.class;
+            }
+            
+            @Override
+            public String[] excludeFromCompression() {
+                return new String[] { MimeTypes.BINARY };
+            }
+        });
 
         httpServer.start(port.orElseGet(() -> findRandomOpenPortOnAllLocalInterfaces())).getValue();
     }

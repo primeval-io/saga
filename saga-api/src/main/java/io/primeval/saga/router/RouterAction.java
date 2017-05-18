@@ -32,4 +32,9 @@ public final class RouterAction {
         return Objects.equals(route, other.route);
     }
 
+    @Override
+    public String toString() {
+        return "RouterAction [route=" + route + ", action=" + action + "]";
+    }
+
 }

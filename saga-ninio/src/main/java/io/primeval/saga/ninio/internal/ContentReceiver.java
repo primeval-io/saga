@@ -6,17 +6,17 @@ import org.reactivestreams.Publisher;
 
 import com.davfx.ninio.http.HttpContentReceiver;
 
-import reactor.core.publisher.BlockingSink;
+import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.UnicastProcessor;
 
 public final class ContentReceiver implements HttpContentReceiver {
 
-    private final BlockingSink<ByteBuffer> sink;
+    private final FluxSink<ByteBuffer> sink;
     private final UnicastProcessor<ByteBuffer> emitter;
 
     public ContentReceiver() {
         emitter = UnicastProcessor.create();
-        this.sink = emitter.connectSink();
+        this.sink = emitter.sink();
     }
 
     @Override

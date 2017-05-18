@@ -11,4 +11,9 @@ public final class Action {
         this.function = function;
     }
 
+    @Override
+    public String toString() {
+        return "Action [actionKey=" + actionKey.repr() + "]";
+    }
+
 }

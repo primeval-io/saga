@@ -1,4 +1,4 @@
-package io.primeval.saga.router.filter;
+package io.primeval.saga.interception.request;
 
 import java.util.Optional;
 
@@ -9,9 +9,9 @@ import io.primeval.saga.action.Context;
 import io.primeval.saga.action.Result;
 import io.primeval.saga.router.Route;
 
-public interface RouteFilterProvider {
+public interface RequestInterceptor {
 
-    Promise<Result<?>> call(Context context, ActionFunction function, Optional<Route> boundRoute);
+    Promise<Result<?>> onRequest(Context context, ActionFunction function, Optional<Route> boundRoute);
 
     boolean matches(String uri);
 }
