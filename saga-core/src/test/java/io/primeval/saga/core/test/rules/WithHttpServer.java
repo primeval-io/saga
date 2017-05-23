@@ -15,6 +15,7 @@ import io.primeval.common.test.rules.TestResource;
 import io.primeval.saga.core.internal.parameter.HttpParameterConverterImpl;
 import io.primeval.saga.core.internal.server.HttpServerImpl;
 import io.primeval.saga.core.internal.server.SagaServerConfig;
+import io.primeval.saga.core.internal.server.exception.ExceptionRecoveryHandlerImpl;
 import io.primeval.saga.http.server.spi.HttpServerProvider;
 import io.primeval.saga.http.shared.provider.ProviderProperties;
 import io.primeval.saga.http.shared.provider.SagaProvider;
@@ -52,7 +53,8 @@ public class WithHttpServer extends ExternalResource implements TestResource {
         httpServer.setDispatcher(wCodex.getDispatcher());
         httpServer.setScheduler(wCodex.getScheduler());
         httpServer.setRouter(routerSupplier.get());
-
+        httpServer.setExceptionRecoveryInterceptor(new ExceptionRecoveryHandlerImpl());
+        
         HttpServerProvider httpServerProvider = serverProvider.get();
         SagaProvider sagaProvider = httpServerProvider.getClass().getAnnotation(SagaProvider.class);
         if (sagaProvider == null) {

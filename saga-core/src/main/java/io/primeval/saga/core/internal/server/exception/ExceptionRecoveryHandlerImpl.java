@@ -22,19 +22,18 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.util.promise.Promise;
 
 import io.primeval.codex.promise.PromiseHelper;
-import io.primeval.saga.action.ActionFunction;
 import io.primeval.saga.action.Context;
 import io.primeval.saga.action.Result;
 import io.primeval.saga.core.internal.server.Orderer;
 import io.primeval.saga.core.internal.server.ServiceReferenceOrderer;
 import io.primeval.saga.router.Route;
 import io.primeval.saga.router.exception.ExceptionRecovery;
-import io.primeval.saga.router.exception.ExceptionRecoveryInterceptor;
+import io.primeval.saga.router.exception.ExceptionRecoveryHandler;
 import io.primeval.saga.router.exception.ExceptionRecoveryProvider;
 
-// Separate injection ; does not publish RequestInterceptor.
+// Separate injection ; does not publish RequestHandler.
 @Component(immediate = true)
-public final class ExceptionRecoveryInterceptorImpl implements ExceptionRecoveryInterceptor {
+public final class ExceptionRecoveryHandlerImpl implements ExceptionRecoveryHandler {
 
     private final Map<Class<? extends Throwable>, AtomicReference<SortedMap<Orderer<ExceptionRecoveryProvider<?>>, ExceptionRecovery<?>>>> mappers = Maps
             .newConcurrentMap();
@@ -42,13 +41,7 @@ public final class ExceptionRecoveryInterceptorImpl implements ExceptionRecovery
             .of();
 
     @Override
-    public Promise<Result<?>> onRequest(Context context, ActionFunction function, Optional<Route> boundRoute) {
-        return PromiseHelper.wrapPromise(() -> function.apply(context))
-                .recoverWith(p -> handleRecovery(PromiseHelper.getFailure(p), context, boundRoute));
-
-    }
-
-    private <T extends Throwable> Promise<Result<?>> handleRecovery(T failure, Context context,
+    public <T extends Throwable> Promise<Result<?>> handleRecovery(T failure, Context context,
             Optional<Route> boundRoute) {
         Class<? extends Throwable> failureClazz = (Class<? extends Throwable>) failure.getClass();
         ImmutableList<ExceptionRecovery<?>> exceptionRecoveries = getRecoveries(failureClazz);
@@ -84,7 +77,7 @@ public final class ExceptionRecoveryInterceptorImpl implements ExceptionRecovery
                             nextRecoveries = exceptionRecoveries.stream()
                                     .filter(tail::contains).collect(ImmutableList.toImmutableList());
                             // If same error that couldn't be fixed, go to next recovery
-                        } 
+                        }
                         return handleNextRecoveries(f, context, boundRoute, nextRecoveries);
                     });
         }
@@ -107,11 +100,6 @@ public final class ExceptionRecoveryInterceptorImpl implements ExceptionRecovery
             failureClazz = failureClazz.getSuperclass();
         } while (recoveries.isEmpty() && failureClazz != Object.class);
         return recoveries;
-    }
-
-    @Override
-    public boolean matches(String uri) {
-        return true;
     }
 
     public void addExceptionMapper(ExceptionRecoveryProvider<?> exceptionMapper,

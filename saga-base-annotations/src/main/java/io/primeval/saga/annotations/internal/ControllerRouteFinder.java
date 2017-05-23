@@ -49,6 +49,7 @@ import io.primeval.saga.interception.action.MissingInterceptorException;
 import io.primeval.saga.parameter.HttpParameterConverter;
 import io.primeval.saga.router.Route;
 import io.primeval.saga.router.RouterAction;
+import io.primeval.saga.router.exception.ExceptionRecoveryHandler;
 import io.primeval.saga.serdes.serializer.Serializable;
 
 @Component
@@ -60,6 +61,7 @@ public final class ControllerRouteFinder {
     private HttpParameterConverter httpParameterConverter;
 
     private ActionInterceptorManager actionInterceptorManager;
+    private ExceptionRecoveryHandler exceptionRecoveryHandler;
 
     @Activate
     public void activate(BundleContext bundleContext) {
@@ -82,9 +84,13 @@ public final class ControllerRouteFinder {
         this.actionInterceptorManager = actionInterceptorManager;
     }
 
+    @Reference
+    public void setExceptionRecoveryHandler(ExceptionRecoveryHandler exceptionRecoveryHandler) {
+        this.exceptionRecoveryHandler = exceptionRecoveryHandler;
+    }
+
     public ActionFunction createInvocationHandler(MethodActionKey actionKey, Method m, Object target,
-            List<String> routePattern,
-            Function<Object, Promise<Result<?>>> wrap, TypeTag resultTypeTag)
+            Route route, List<String> routePattern, Function<Object, Promise<Result<?>>> wrap, TypeTag resultTypeTag)
             throws NoSuchMethodException, IllegalAccessException {
 
         Iterator<Annotation> interceptAnnotations = Stream.of(m.getAnnotations())
@@ -155,7 +161,7 @@ public final class ControllerRouteFinder {
                 throw new IllegalArgumentException("Method " + m + " cannot be injected");
             }
         }
-        return wrapInterceptors(actionKey, interceptAnnotations,
+        return wrapInterceptors(actionKey, Optional.of(route), interceptAnnotations,
                 createActionFunction(wrap, resultTypeTag, methodHandle, inject));
     }
 
@@ -175,35 +181,35 @@ public final class ControllerRouteFinder {
         };
     }
 
-    private <T> ActionFunction wrapInterceptors(ActionKey actionKey, Iterator<T> interceptAnnotations,
+    private <T> ActionFunction wrapInterceptors(ActionKey actionKey, Optional<Route> route, Iterator<T> interceptAnnotations,
             ActionFunction sourceInvocation) {
         if (!interceptAnnotations.hasNext()) {
             return sourceInvocation;
         } else {
             T head = interceptAnnotations.next();
-            return wrapInterceptor(actionKey, head,
-                    wrapInterceptors(actionKey, interceptAnnotations, sourceInvocation));
+            return wrapInterceptor(actionKey, route, head,
+                    wrapInterceptors(actionKey, route, interceptAnnotations, sourceInvocation));
         }
 
     }
 
-    private <T> ActionFunction wrapInterceptor(ActionKey actionKey, T interceptAnnotation,
+    private <T> ActionFunction wrapInterceptor(ActionKey actionKey, Optional<Route> route, T interceptAnnotation,
             ActionFunction sourceInvocation) {
-        return context -> {
-            @SuppressWarnings("unchecked")
-            Class<T> interceptorType = (Class<T>) ((Annotation) interceptAnnotation).annotationType();
-            ActionInterceptor<T> actionInterceptor = actionInterceptorManager.actionInterceptor(interceptorType);
-            InterceptAction interceptAction = interceptorType.getAnnotation(InterceptAction.class);
-            if (actionInterceptor == null) {
-                if (interceptAction.required()) {
-                    return Promises.failed(new MissingInterceptorException(interceptorType));
-                } else {
-                    return sourceInvocation.apply(context);
-                }
+        @SuppressWarnings("unchecked")
+        Class<T> interceptorType = (Class<T>) ((Annotation) interceptAnnotation).annotationType();
+        ActionInterceptor<T> actionInterceptor = actionInterceptorManager.actionInterceptor(interceptorType);
+        InterceptAction interceptAction = interceptorType.getAnnotation(InterceptAction.class);
+        if (actionInterceptor == null) {
+            if (interceptAction.required()) {
+                return ActionFunction.failed(new MissingInterceptorException(interceptorType));
             } else {
-                return actionInterceptor.onAction(interceptAnnotation, context, actionKey, sourceInvocation);
+                return sourceInvocation;
             }
-        };
+        } else {
+            ActionFunction nextFun = actionInterceptor.applyRecovery() ? exceptionRecoveryHandler.wrap(sourceInvocation, route)
+                    : sourceInvocation;
+            return actionInterceptor.wrap(nextFun, interceptAnnotation, actionKey);
+        }
     }
 
     private int findPatternIndex(List<String> pathPattern, String expectedPattern) {
@@ -326,7 +332,7 @@ public final class ControllerRouteFinder {
             try {
                 MethodActionKey actionKey = new MethodActionKey(m);
 
-                ActionFunction actionInvocationHandler = createInvocationHandler(actionKey, m, controller, routePattern,
+                ActionFunction actionInvocationHandler = createInvocationHandler(actionKey, m, controller, route, routePattern,
                         wrap, resultTypeTag);
                 RouterAction boundAction = new RouterAction(route,
                         new Action(actionKey, actionInvocationHandler));

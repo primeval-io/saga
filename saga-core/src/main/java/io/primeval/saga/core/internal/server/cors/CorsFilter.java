@@ -6,9 +6,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.google.common.base.Joiner;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -16,8 +17,6 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.util.promise.Promise;
 import org.osgi.util.promise.Promises;
-
-import com.google.common.base.Joiner;
 
 import io.primeval.common.type.TypeTag;
 import io.primeval.saga.action.ActionFunction;
@@ -34,8 +33,6 @@ import io.primeval.saga.router.Router;
 
 @Component(configurationPid = "saga.cors.filter", configurationPolicy = ConfigurationPolicy.REQUIRE)
 public final class CorsFilter implements RequestInterceptor {
-
-    private static final Pattern PATTERN = Pattern.compile(".*");
 
     private Router router;
 
@@ -81,7 +78,6 @@ public final class CorsFilter implements RequestInterceptor {
 
     }
 
-    @SuppressWarnings("unchecked")
     private Promise<Result<?>> preflight(Context context, ActionFunction actionFunction, String originHeader,
             Collection<Route> routes) {
         HttpRequest request = context.request();
@@ -104,7 +100,7 @@ public final class CorsFilter implements RequestInterceptor {
             return actionFunction.apply(context);
         }
 
-        ImmutableResult.Builder res = ImmutableResult.builder(); // setup result
+        ImmutableResult.Builder<Object> res = ImmutableResult.builder(); // setup result
 
         if (!methods.contains(requestMethod.toUpperCase())) {
             res = res.withStatusCode(401).setValue("No such method for this route")
@@ -140,7 +136,7 @@ public final class CorsFilter implements RequestInterceptor {
         // Is it actually a CORS request?
         if (originHeader != null) {
             resultPms = resultPms.map(result -> {
-                ImmutableResult.Builder resBuilder = ImmutableResult.copySetupAndContentOf(result);
+                ImmutableResult.Builder<?> resBuilder = ImmutableResult.copySetupAndContentOf(result);
                 String allowedHosts = getAllowedHostsHeader(originHeader);
                 resBuilder = resBuilder.withHeader(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, allowedHosts);
                 if (config.allow_credentials()) {
@@ -174,7 +170,7 @@ public final class CorsFilter implements RequestInterceptor {
 
     @Override
     public boolean matches(String pattern) {
-        return PATTERN.matcher(pattern).matches();
+        return true;
     }
 
 }

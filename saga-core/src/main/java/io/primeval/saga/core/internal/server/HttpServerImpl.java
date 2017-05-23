@@ -32,7 +32,7 @@ import io.primeval.saga.http.shared.provider.ProviderProperties;
 import io.primeval.saga.interception.request.RequestInterceptor;
 import io.primeval.saga.parameter.HttpParameterConverter;
 import io.primeval.saga.router.Router;
-import io.primeval.saga.router.exception.ExceptionRecoveryInterceptor;
+import io.primeval.saga.router.exception.ExceptionRecoveryHandler;
 import io.primeval.saga.serdes.deserializer.Deserializer;
 import io.primeval.saga.serdes.serializer.Serializer;
 import reactor.core.Disposable;
@@ -74,24 +74,20 @@ public final class HttpServerImpl implements HttpServer {
     private AtomicReference<ImmutableSet<String>> excludeFromCompression = new AtomicReference<>(
             ImmutableSet.of());
 
-    private ExceptionRecoveryInterceptor exceptionRecoveryInterceptor;
+    private ExceptionRecoveryHandler exceptionRecoveryHandler;
 
     @Activate
     public void activate(SagaServerConfig config) {
-        httpServerEventHandler = new HttpServerEventHandler(dispatcher, router, this::currentFilterProviders,
-                serializer,
-                deserializer,
-                paramConverter, excludeFromCompression::get);
+        httpServerEventHandler = new HttpServerEventHandler(dispatcher, router, this::currentFilterProviders, exceptionRecoveryHandler,
+                serializer, deserializer, paramConverter, excludeFromCompression::get);
         applyConfig(config);
     }
-
 
     @Modified
     public void updated(SagaServerConfig config) {
         applyConfig(config);
     }
-    
-    
+
     private void applyConfig(SagaServerConfig config) {
         excludeFromCompression.set(ImmutableSet.copyOf(config.excludeFromCompression()));
     }
@@ -198,8 +194,8 @@ public final class HttpServerImpl implements HttpServer {
     }
 
     @Reference
-    public void setExceptionRecoveryInterceptor(ExceptionRecoveryInterceptor exceptionRecoveryInterceptor) {
-        this.exceptionRecoveryInterceptor = exceptionRecoveryInterceptor;
+    public void setExceptionRecoveryInterceptor(ExceptionRecoveryHandler exceptionRecoveryInterceptor) {
+        this.exceptionRecoveryHandler = exceptionRecoveryInterceptor;
         rebuildRouteFilterProviders();
     }
 
@@ -224,8 +220,7 @@ public final class HttpServerImpl implements HttpServer {
     }
 
     public void rebuildRouteFilterProviders() {
-        allRouteFilterProviders.set(ImmutableList.<RequestInterceptor> builder().add(exceptionRecoveryInterceptor)
-                .addAll(routeFilterProviders.get().values()).add(exceptionRecoveryInterceptor).build());
+        allRouteFilterProviders.set(ImmutableList.copyOf(routeFilterProviders.get().values()));
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)

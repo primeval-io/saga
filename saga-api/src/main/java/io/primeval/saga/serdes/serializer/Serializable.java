@@ -35,4 +35,8 @@ public interface Serializable<T> {
         return new SerializableImpl<>(object, typeTag);
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> Serializable<T> emptyPayload() {
+        return (Serializable<T>) EMPTY_PAYLOAD;
+    }
 }

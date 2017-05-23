@@ -27,14 +27,14 @@ import io.primeval.saga.http.shared.Payload;
 import io.primeval.saga.router.Route;
 import io.primeval.saga.router.exception.ExceptionRecoveryProvider;
 
-public class ExceptionMappingFilterProviderTest {
+public class ExceptionRecoveryInterceptorTest {
 
-    private static ExceptionRecoveryInterceptorImpl tested;
+    private static ExceptionRecoveryHandlerImpl tested;
     private static Context fakeContext;
 
     @BeforeClass
     public static void setUp() {
-        tested = new ExceptionRecoveryInterceptorImpl();
+        tested = new ExceptionRecoveryHandlerImpl();
         fakeContext = new Context() {
 
             @Override
