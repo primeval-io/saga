@@ -5,6 +5,11 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Maps;
+
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -17,15 +22,9 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Maps;
-
 import io.primeval.codex.dispatcher.Dispatcher;
 import io.primeval.codex.scheduler.Scheduler;
 import io.primeval.common.property.PropertyHelper;
-import io.primeval.saga.core.internal.server.exception.ExceptionMappingFilterProvider;
 import io.primeval.saga.http.server.HttpServer;
 import io.primeval.saga.http.server.spi.HttpServerEvent;
 import io.primeval.saga.http.server.spi.HttpServerProvider;
@@ -33,6 +32,7 @@ import io.primeval.saga.http.shared.provider.ProviderProperties;
 import io.primeval.saga.interception.request.RequestInterceptor;
 import io.primeval.saga.parameter.HttpParameterConverter;
 import io.primeval.saga.router.Router;
+import io.primeval.saga.router.exception.ExceptionRecoveryInterceptor;
 import io.primeval.saga.serdes.deserializer.Deserializer;
 import io.primeval.saga.serdes.serializer.Serializer;
 import reactor.core.Disposable;
@@ -74,7 +74,7 @@ public final class HttpServerImpl implements HttpServer {
     private AtomicReference<ImmutableSet<String>> excludeFromCompression = new AtomicReference<>(
             ImmutableSet.of());
 
-    private ExceptionMappingFilterProvider exceptionMappingFilterProvider;
+    private ExceptionRecoveryInterceptor exceptionRecoveryInterceptor;
 
     @Activate
     public void activate(SagaServerConfig config) {
@@ -198,10 +198,9 @@ public final class HttpServerImpl implements HttpServer {
     }
 
     @Reference
-    public void setExceptionMappingFilterProvider(ExceptionMappingFilterProvider exceptionMappingFilterProvider) {
-        this.exceptionMappingFilterProvider = exceptionMappingFilterProvider;
+    public void setExceptionRecoveryInterceptor(ExceptionRecoveryInterceptor exceptionRecoveryInterceptor) {
+        this.exceptionRecoveryInterceptor = exceptionRecoveryInterceptor;
         rebuildRouteFilterProviders();
-        ;
     }
 
     public void addRouteFilterProvider(RequestInterceptor routeFilterProvider,
@@ -225,8 +224,8 @@ public final class HttpServerImpl implements HttpServer {
     }
 
     public void rebuildRouteFilterProviders() {
-        allRouteFilterProviders.set(ImmutableList.<RequestInterceptor> builder().add(exceptionMappingFilterProvider)
-                .addAll(routeFilterProviders.get().values()).add(exceptionMappingFilterProvider).build());
+        allRouteFilterProviders.set(ImmutableList.<RequestInterceptor> builder().add(exceptionRecoveryInterceptor)
+                .addAll(routeFilterProviders.get().values()).add(exceptionRecoveryInterceptor).build());
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)

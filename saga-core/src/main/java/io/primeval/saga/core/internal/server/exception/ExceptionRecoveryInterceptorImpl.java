@@ -9,6 +9,11 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Maps;
+
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -16,25 +21,20 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.util.promise.Promise;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Maps;
-
 import io.primeval.codex.promise.PromiseHelper;
 import io.primeval.saga.action.ActionFunction;
 import io.primeval.saga.action.Context;
 import io.primeval.saga.action.Result;
 import io.primeval.saga.core.internal.server.Orderer;
 import io.primeval.saga.core.internal.server.ServiceReferenceOrderer;
-import io.primeval.saga.interception.request.RequestInterceptor;
 import io.primeval.saga.router.Route;
 import io.primeval.saga.router.exception.ExceptionRecovery;
+import io.primeval.saga.router.exception.ExceptionRecoveryInterceptor;
 import io.primeval.saga.router.exception.ExceptionRecoveryProvider;
 
-// Separate injection to guarantee FIRST position.
-@Component(immediate = true, service = ExceptionMappingFilterProvider.class)
-public final class ExceptionMappingFilterProvider implements RequestInterceptor {
+// Separate injection ; does not publish RequestInterceptor.
+@Component(immediate = true)
+public final class ExceptionRecoveryInterceptorImpl implements ExceptionRecoveryInterceptor {
 
     private final Map<Class<? extends Throwable>, AtomicReference<SortedMap<Orderer<ExceptionRecoveryProvider<?>>, ExceptionRecovery<?>>>> mappers = Maps
             .newConcurrentMap();

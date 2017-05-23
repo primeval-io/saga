@@ -29,12 +29,12 @@ import io.primeval.saga.router.exception.ExceptionRecoveryProvider;
 
 public class ExceptionMappingFilterProviderTest {
 
-    private static ExceptionMappingFilterProvider tested;
+    private static ExceptionRecoveryInterceptorImpl tested;
     private static Context fakeContext;
 
     @BeforeClass
     public static void setUp() {
-        tested = new ExceptionMappingFilterProvider();
+        tested = new ExceptionRecoveryInterceptorImpl();
         fakeContext = new Context() {
 
             @Override
