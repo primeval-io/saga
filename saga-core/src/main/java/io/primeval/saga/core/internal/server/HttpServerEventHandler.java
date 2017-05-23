@@ -83,8 +83,10 @@ public final class HttpServerEventHandler {
 
         Collection<RequestInterceptor> filters = routeFilterProviders.get();
 
-        List<RequestInterceptor> activeFilters = Lists.reverse(filters.stream()
-                .filter(f -> f.matches(request.uri)).collect(Collectors.toList()));
+        // Interceptors in reverse order ; they are wrapped so leaving them
+        // in that order enables them in the "right" order!
+        List<RequestInterceptor> activeFilters = filters.stream()
+                .filter(f -> f.matches(request.uri)).collect(Collectors.toList());
 
         return routerActionPms.map(routerAction -> {
             Optional<Route> boundRoute = routerAction.map(ra -> ra.route);
