@@ -61,19 +61,19 @@ public final class JsonReactiveDeserializer implements MediaDeserializer {
             }
 
             Mono<List<ByteBuffer>> mono = Flux.from(buffer).collectList();
-            Mono<T> res = mono.map(l -> fromJson(l, typeTag, classLoader));
+            Mono<T> res = mono.flatMap(l -> fromJson(l, typeTag, classLoader));
 
             return PromiseHelper.fromMono(res);
         }
 
-        <U> U fromJson(List<ByteBuffer> fromBuffers, TypeTag<U> toType, ClassLoader classLoader) {
+        <U> Mono<U> fromJson(List<ByteBuffer> fromBuffers, TypeTag<U> toType, ClassLoader classLoader) {
             if (fromBuffers.isEmpty()) {
-                return null;
+                return Mono.empty();
             }
 
             InputStream inputStream = new ByteBufferListInputStream(fromBuffers);
 
-            return jsonDeserializer.fromJson(inputStream, toType, classLoader);
+            return Mono.justOrEmpty(jsonDeserializer.fromJson(inputStream, toType, classLoader));
         }
     }
 
