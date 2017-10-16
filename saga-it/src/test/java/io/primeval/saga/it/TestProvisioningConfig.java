@@ -20,7 +20,8 @@ public final class TestProvisioningConfig {
     public static Option baseOptions() {
         return composite(
                 frameworkStartLevel(org.ops4j.pax.exam.Constants.START_LEVEL_TEST_BUNDLE),
-                bootDelegationPackage("sun.*"), systemPackage("sun.misc"), cleanCaches(),
+                bootDelegationPackage("sun.*"), systemPackage("sun.misc"), systemPackage("sun.nio.ch"),
+                cleanCaches(),
                 url("link:classpath:META-INF/links/org.ops4j.pax.swissbox.tracker.link")
                         .startLevel(START_LEVEL_SYSTEM_BUNDLES),
                 url("link:classpath:META-INF/links/org.ops4j.pax.exam.link").startLevel(START_LEVEL_SYSTEM_BUNDLES),
@@ -81,6 +82,8 @@ public final class TestProvisioningConfig {
 
     public static Option primevalCommonsAndCodex() {
         return composite(mavenBundle("org.reactivestreams", "reactive-streams").versionAsInProject(),
+                mavenBundle("org.jetbrains.kotlin", "kotlin-osgi-bundle", "1.1.51"),
+                mavenBundle("com.google.code.findbugs", "jsr305", "3.0.2"),
                 mavenBundle("io.projectreactor", "reactor-core").versionAsInProject(),
                 mavenBundle("io.primeval", "primeval-commons").versionAsInProject(),
                 mavenBundle("io.primeval", "primeval-codex").versionAsInProject());

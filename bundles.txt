@@ -9,16 +9,20 @@ mvn:org.apache.felix/org.apache.felix.fileinstall/3.5.8@update
 mvn:com.google.guava/guava/18.0@update
 mvn:com.google.guava/guava/21.0@update
 mvn:com.typesafe/config/1.2.1@update
-mvn:com.davfx.ninio/ninio-util/3.0.19@update
-mvn:com.davfx.ninio/ninio-core/3.0.19@update
-mvn:com.davfx.ninio/ninio-dns/3.0.19@update
-mvn:com.davfx.ninio/ninio-http/3.0.19@update
+mvn:com.davfx.ninio/ninio-util/3.0.21@update
+mvn:com.davfx.ninio/ninio-core/3.0.21@update
+mvn:com.davfx.ninio/ninio-dns/3.0.21@update
+mvn:com.davfx.ninio/ninio-http/3.0.21@update
 mvn:org.reactivestreams/reactive-streams/1.0.0@update
-mvn:io.projectreactor/reactor-core/3.0.5.RELEASE@update
+mvn:org.jetbrains.kotlin/kotlin-osgi-bundle/1.1.51
+mvn:com.google.code.findbugs/jsr305/3.0.2
+mvn:io.projectreactor/reactor-core/3.1.0.RELEASE
 mvn:io.primeval/primeval-commons/1.1.0-SNAPSHOT@update
 mvn:io.primeval/primeval-codex/1.1.0-SNAPSHOT@update
+mvn:io.primeval/primeval-reflex/1.1.0-SNAPSHOT@update
 mvn:io.primeval/primeval-json/1.0.0-SNAPSHOT@update
 mvn:io.primeval/primeval-json-jackson/1.0.0-SNAPSHOT@update
+mvn:io.primeval/primeval-jackson-adt/1.1.0-SNAPSHOT@update
 mvn:io.primeval/primeval-jackson-guava18/1.0.0-SNAPSHOT@update
 mvn:io.primeval/primeval-jackson-guava21/1.0.0-SNAPSHOT@update
 
