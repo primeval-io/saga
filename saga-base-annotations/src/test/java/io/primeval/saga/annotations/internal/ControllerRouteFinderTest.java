@@ -31,6 +31,7 @@ public class ControllerRouteFinderTest {
 
             Result<?> result = ba.action.function.apply(new Context() {
 
+                @SuppressWarnings("unchecked")
                 @Override
                 public <T> Promise<T> queryParameter(String parameterName, TypeTag<? extends T> typeTag,
                         ClassLoader classLoader) {
@@ -45,6 +46,7 @@ public class ControllerRouteFinderTest {
                     return ImmutableList.of(Optional.of("foo"));
                 }
 
+                @SuppressWarnings("unchecked")
                 @Override
                 public <T> Promise<T> body(TypeTag<? extends T> typeTag, ClassLoader classLoader) {
                     return (Promise<T>) Promises.resolved("Hello World");

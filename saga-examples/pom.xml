@@ -12,17 +12,15 @@
 
 	<name>Saga Examples</name>
 	<description>Saga Examples</description>
-	
+
 	<packaging>jar</packaging>
 
 	<dependencies>
-
 		<dependency>
 			<groupId>io.primeval.saga</groupId>
 			<artifactId>saga-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
 
 		<dependency>
 			<groupId>io.primeval.saga</groupId>
@@ -35,53 +33,27 @@
 			<artifactId>saga-base-annotations</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>io.primeval.saga</groupId>
-			<artifactId>saga-core</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
-
-		<!-- OSGi -->
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.core</artifactId>
-			<version>6.0.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>osgi.cmpn</artifactId>
-			<version>6.0.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.util.promise</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>21.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.12</version>
-		</dependency>
-
 	</dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>biz.aQute.bnd</groupId>
-				<artifactId>bnd-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
+
+	<profiles>
+		<profile>
+			<id>index</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>biz.aQute.bnd</groupId>
+						<artifactId>bnd-indexer-maven-plugin</artifactId>
+						<configuration>
+							<scopes>
+								<scope/>
+							</scopes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+	</profiles>
+
 </project>

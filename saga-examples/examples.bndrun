@@ -1,0 +1,51 @@
+-standalone: \
+	../saga-distrib/target/index.xml;name=saga;cachefile=false,\
+	../saga-ninio/target/index.xml;name=ninio,\
+	target/index.xml;name=examples
+
+-runfw: org.apache.felix.framework;version=5.6.10
+-runee: JavaSE-1.8
+#-runtrace: true
+#-runvm: "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=7001"
+-runprovidedcapabilities: ${native_capability}
+
+-runsystempackages: sun.misc, sun.nio.ch
+
+-resolve.effective: active; skip:="osgi.service"
+
+-runrequires: \
+	osgi.identity;filter:='(osgi.identity=org.apache.felix.gogo.command)',\
+	osgi.identity;filter:='(osgi.identity=org.apache.felix.gogo.shell)',\
+	osgi.identity;filter:='(osgi.identity=org.apache.felix.log)',\
+	osgi.identity;filter:='(osgi.identity=io.primeval.saga.examples)',\
+	osgi.identity;filter:='(osgi.identity=saga-core)',\
+	osgi.identity;filter:='(osgi.identity=saga-ninio)'
+
+-runbundles: \
+	ch.qos.logback.classic;version='[1.2.3,1.2.4)',\
+	ch.qos.logback.core;version='[1.2.3,1.2.4)',\
+	com.davfx.ninio.core;version='[3.0.21,3.0.22)',\
+	com.davfx.ninio.dns;version='[3.0.21,3.0.22)',\
+	com.davfx.ninio.http;version='[3.0.21,3.0.22)',\
+	com.davfx.ninio.util;version='[3.0.21,3.0.22)',\
+	com.google.guava;version='[18.0.0,18.0.1)',\
+	com.google.guava;version='[23.4.0,23.4.1)',\
+	com.typesafe.config;version='[1.2.1,1.2.2)',\
+	io.primeval.codex;version='[1.1.0,1.1.1)',\
+	io.primeval.commons;version='[1.1.0,1.1.1)',\
+	io.primeval.compendium.i18n;version='[1.0.0,1.0.1)',\
+	io.primeval.json;version='[1.0.0,1.0.1)',\
+	io.primeval.saga.examples;version='[1.0.0,1.0.1)',\
+	io.projectreactor.reactor-core;version='[3.1.1,3.1.2)',\
+	org.apache.felix.gogo.command;version='[1.0.2,1.0.3)',\
+	org.apache.felix.gogo.runtime;version='[1.0.0,1.0.1)',\
+	org.apache.felix.gogo.shell;version='[1.0.0,1.0.1)',\
+	org.apache.felix.log;version='[1.0.1,1.0.2)',\
+	org.apache.felix.scr;version='[2.0.12,2.0.13)',\
+	org.reactivestreams.reactive-streams;version='[1.0.1,1.0.2)',\
+	saga-api;version='[1.0.0,1.0.1)',\
+	saga-base-annotations;version='[1.0.0,1.0.1)',\
+	saga-core;version='[1.0.0,1.0.1)',\
+	saga-guava;version='[1.0.0,1.0.1)',\
+	saga-ninio;version='[1.0.0,1.0.1)',\
+	slf4j.api;version='[1.7.25,1.7.26)'

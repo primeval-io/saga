@@ -1,4 +1,5 @@
 Bundle-SymbolicName: io.primeval.saga.thymeleaf
 Private-Package: org.thymeleaf, org.thymeleaf.*
-Import-Package: javax.servlet;resolution:=optional, !javax.servlet.*;resolution:=optional, *
-DynamicImport-Package: com.fasterxml.jackson.datatype.jsr310
+Import-Package: javax.servlet;resolution:=optional, !javax.servlet.*;resolution:=optional,\
+ com.fasterxml.jackson.datatype.jsr310;resolution:=dynamic,*
+ 

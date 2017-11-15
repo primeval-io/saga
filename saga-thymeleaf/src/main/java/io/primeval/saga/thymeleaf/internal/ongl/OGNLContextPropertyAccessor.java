@@ -65,7 +65,6 @@ public final class OGNLContextPropertyAccessor implements PropertyAccessor {
         final String propertyName = (name == null? null : name.toString());
 
         // 'execInfo' translation from context variable to expression object - deprecated and to be removed in 3.1
-        @SuppressWarnings("unchecked")
         final Object execInfoResult = checkExecInfo(propertyName, ognlContext);
         if (execInfoResult != null) {
             return execInfoResult;

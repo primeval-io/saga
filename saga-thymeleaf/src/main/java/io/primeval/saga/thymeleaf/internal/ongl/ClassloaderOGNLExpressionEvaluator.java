@@ -297,7 +297,7 @@ public class ClassloaderOGNLExpressionEvaluator implements IStandardVariableExpr
         } else {
             cr = new DefaultClassResolver();
         }
-        final OgnlContext ognlContext = new OgnlContext(cr, null, null, context);
+        final OgnlContext ognlContext = new OgnlContext(null, cr, null, context);
         return ognl.Ognl.getValue(parsedExpression, ognlContext, root);
 
     }

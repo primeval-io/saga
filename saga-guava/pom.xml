@@ -6,17 +6,16 @@
 		<artifactId>saga</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
+	<packaging>jar</packaging>
+
 
 	<artifactId>saga-guava</artifactId>
 
-
 	<name>Saga Guava</name>
 	<description>Saga Guava Utils</description>
-	
-	<packaging>jar</packaging>
+
 
 	<dependencies>
-
 		<dependency>
 			<groupId>io.primeval.saga</groupId>
 			<artifactId>saga-api</artifactId>
@@ -26,23 +25,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>21.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.12</version>
 		</dependency>
 
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>biz.aQute.bnd</groupId>
-				<artifactId>bnd-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
 </project>

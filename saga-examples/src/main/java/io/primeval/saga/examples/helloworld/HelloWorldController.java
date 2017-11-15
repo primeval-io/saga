@@ -40,10 +40,15 @@ public final class HelloWorldController {
 
     @Reference
     public ReactiveResourceReader reactiveResourceReader;
-
+    
     @Route(method = HttpMethod.GET, uri = "hello")
     public String hello(@QueryParameter String who) {
         return "Hello " + who;
+    }
+    
+    @Route(method = HttpMethod.GET, uri = "hello2")
+    public String hello2(@QueryParameter String who) {
+        return "Hello " + who + "!!";
     }
 
     @Route(method = HttpMethod.GET, uri = "ingredients")

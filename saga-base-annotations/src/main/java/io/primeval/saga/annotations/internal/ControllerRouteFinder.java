@@ -340,8 +340,9 @@ public final class ControllerRouteFinder {
                 boundActions.add(boundAction);
             } catch (Exception e) {
                 // Maybe register it as unsatisfied.
-                LOGGER.warn("Could not create action with route {} {} for method {}", route.method, route.pathPattern,
-                        m.getDeclaringClass().getName() + "#" + m.getName(), e.getMessage());
+                LOGGER.warn("Could not create action with route {} {} for method {}: ({}: {})", route.method, route.pathPattern,
+                        m.getDeclaringClass().getName() + "#" + m.getName(), e.getClass().getName(), e.getMessage());
+                LOGGER.debug("Action creation error", e);
                 continue;
             }
 
