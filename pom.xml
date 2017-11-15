@@ -17,7 +17,14 @@
 	<properties>
 		<primeval-commons.version>1.1.0-SNAPSHOT</primeval-commons.version>
 		<primeval-codex.version>1.1.0-SNAPSHOT</primeval-codex.version>
+		<primeval-3rdparty-bom.version>1.0.0-SNAPSHOT</primeval-3rdparty-bom.version>
+		<primeval-component-annotations.version>2.0.0</primeval-component-annotations.version>
+		<primeval-json.version>1.0.0-SNAPSHOT</primeval-json.version>
+		<primeval-json-jackson.version>1.0.0-SNAPSHOT</primeval-json-jackson.version>
+		<primeval-cmpn-i18n.version>1.0.0-SNAPSHOT</primeval-cmpn-i18n.version>
+		<primeval-reflex.version>1.0.0-SNAPSHOT</primeval-reflex.version>
 	</properties>
+
 
 	<dependencyManagement>
 		<dependencies>
@@ -42,12 +49,51 @@
 				<version>${primeval-codex.version}</version>
 			</dependency>
 
+
 			<dependency>
 				<groupId>io.primeval</groupId>
 				<artifactId>primeval-codex</artifactId>
 				<version>${primeval-codex.version}</version>
 				<scope>test</scope>
 				<type>test-jar</type>
+			</dependency>
+
+			<dependency>
+				<groupId>io.primeval</groupId>
+				<artifactId>primeval-reflex</artifactId>
+				<version>${primeval-reflex.version}</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>io.primeval.component.annotation</groupId>
+				<artifactId>component-annotation-properties</artifactId>
+				<version>${primeval-component-annotations.version}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>io.primeval.compendium</groupId>
+				<artifactId>primeval-cmpn-i18n</artifactId>
+				<version>${primeval-cmpn-i18n.version}</version>
+			</dependency>
+
+
+			<dependency>
+				<groupId>io.primeval</groupId>
+				<artifactId>primeval-json</artifactId>
+				<version>${primeval-json.version}</version>
+			</dependency>
+
+
+
+
+			<dependency>
+				<groupId>io.primeval</groupId>
+				<artifactId>primeval-thirdparty-bom</artifactId>
+				<version>${primeval-3rdparty-bom.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

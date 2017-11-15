@@ -3,6 +3,7 @@ package io.primeval.saga.it;
 import static io.primeval.saga.it.TestProvisioningConfig.baseOptions;
 import static io.primeval.saga.it.TestProvisioningConfig.dsAndFriends;
 import static io.primeval.saga.it.TestProvisioningConfig.extraSnapshotRepository;
+import static io.primeval.saga.it.TestProvisioningConfig.guavas;
 import static io.primeval.saga.it.TestProvisioningConfig.ninio;
 import static io.primeval.saga.it.TestProvisioningConfig.primevalCommonsAndCodex;
 import static io.primeval.saga.it.TestProvisioningConfig.primevalCompendium;
@@ -13,13 +14,13 @@ import static io.primeval.saga.it.TestProvisioningConfig.sagaNinio;
 import static io.primeval.saga.it.TestProvisioningConfig.sagaThymeleaf;
 import static io.primeval.saga.it.TestProvisioningConfig.slf4jLogging;
 import static io.primeval.saga.it.TestProvisioningConfig.testingBundles;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -37,11 +38,13 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.util.promise.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import io.primeval.codex.promise.PromiseHelper;
 import io.primeval.common.type.TypeTag;
 import io.primeval.saga.http.client.HttpClient;
 import io.primeval.saga.http.client.HttpClientRawResponse;
@@ -73,6 +76,7 @@ public class SagaIntegrationTest {
                 baseOptions(),
                 testingBundles(),
                 slf4jLogging(),
+                guavas(),
                 ninio(),
                 primevalCommonsAndCodex(),
                 primevalCompendium(),
@@ -106,7 +110,8 @@ public class SagaIntegrationTest {
     // @Ignore
     public void someTest() throws Exception {
 
-        // BundleContext bundleContext = FrameworkUtil.getBundle(SagaIntegrationTest.class).getBundleContext();
+        // BundleContext bundleContext =
+        // FrameworkUtil.getBundle(SagaIntegrationTest.class).getBundleContext();
         // Collection<ComponentDescriptionDTO> componentDescriptionDTOs = scr
         // .getComponentDescriptionDTOs(bundleContext.getBundles());
         //
@@ -117,7 +122,8 @@ public class SagaIntegrationTest {
         // });
         //
         // Stream.of(bundleContext.getBundles()).forEach(bundle -> {
-        // System.out.println(bundle.getSymbolicName() + " " + bundle.getVersion());
+        // System.out.println(bundle.getSymbolicName() + " " +
+        // bundle.getVersion());
         // });
 
         Hashtable<String, Object> corsConfig = new Hashtable<>();
@@ -130,7 +136,7 @@ public class SagaIntegrationTest {
         i18nConfig.put("defaultLocale", "en");
         i18nConfig.put("supportedLocales", ImmutableList.of("en", "fr"));
         configAdmin.getConfiguration("primeval.compendium.i18n", "?").update(i18nConfig);
-        
+
         int port = httpServer.start(findRandomOpenPortOnAllLocalInterfaces()).flatMap(x -> httpServer.port())
                 .getValue();
         LOGGER.info("Starting Saga server on port {}", port);
@@ -139,9 +145,17 @@ public class SagaIntegrationTest {
 
         assertThat(response).isEqualTo("Hello World");
 
-        ImmutableList<String> ingredients = httpClient.to("localhost", port).get("/ingredients")
+        HttpClientRawResponse rawResp = httpClient.to("localhost", port).get("/ingredients")
+                .withHeader(HeaderNames.ACCEPT, MimeTypes.JSON).exec().getValue();
+        LOGGER.info(getAsString(rawResp));
+        
+        Promise<ImmutableList<String>> igtPms = PromiseHelper.wrapPromise(() -> httpClient.to("localhost", port).get("/ingredients")
+                .withHeader(HeaderNames.ACCEPT, MimeTypes.JSON)
                 .execMap(new TypeTag<ImmutableList<String>>() {
-                }).getValue();
+                }));
+        PromiseHelper.onFailure(igtPms, t -> t.printStackTrace());
+        
+        ImmutableList<String> ingredients = igtPms.getValue();
 
         assertThat(ingredients).contains("Milk");
 
@@ -151,11 +165,7 @@ public class SagaIntegrationTest {
         HttpClientRawResponse item37 = httpClient.to("localhost", port).get("/item?id=37").exec()
                 .getValue();
         assertThat(item37.code).isEqualTo(404);
-        assertThat(
-                deserializer
-                        .deserialize(item37.payload, TypeTag.of(String.class),
-                                SagaIntegrationTest.class.getClassLoader(), MimeTypes.TEXT, Collections.emptyMap())
-                        .getValue()).isEqualTo("Unknown item 37");
+        assertThat(getAsString(item37)).isEqualTo("Unknown item 37");
 
         HttpClientRawResponse emptyResp = httpClient.to("localhost", port).get("/emptyResult").exec().getValue();
         assertThat(emptyResp.code).isEqualTo(Status.GONE);
@@ -176,6 +186,13 @@ public class SagaIntegrationTest {
         }
         httpServer.stop().getValue();
 
+    }
+
+    private String getAsString(HttpClientRawResponse rawResp) throws InvocationTargetException, InterruptedException {
+        return deserializer
+                .deserialize(rawResp.payload, TypeTag.of(String.class),
+                        SagaIntegrationTest.class.getClassLoader(), MimeTypes.TEXT, Collections.emptyMap())
+                .getValue();
     }
 
     private void keepTestsUp() throws InterruptedException {

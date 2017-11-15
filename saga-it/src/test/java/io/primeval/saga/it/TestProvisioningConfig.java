@@ -70,6 +70,12 @@ public final class TestProvisioningConfig {
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
                 mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"));
     }
+    
+    public static Option guavas() {
+        return composite(mavenBundle("com.google.guava", "guava", "18.0"),
+                mavenBundle("com.google.guava", "guava", "21.0"),
+                mavenBundle("com.google.guava", "guava", "23.4-jre"));
+    }
 
     public static Option ninio() {
         return composite(mavenBundle("com.google.guava", "guava", "18.0"),
@@ -91,7 +97,7 @@ public final class TestProvisioningConfig {
 
     public static Option primevalCompendium() {
         return composite(
-                mavenBundle("com.sun.mail", "javax.mail", "1.5.6"),
+                mavenBundle("com.sun.mail", "javax.mail", "1.6.0"),
                 mavenBundle("io.primeval.compendium", "primeval-cmpn-i18n", "1.0.0-SNAPSHOT"),
                 mavenBundle("io.primeval.compendium", "primeval-cmpn-email", "1.0.0-SNAPSHOT"));
     }
@@ -100,6 +106,7 @@ public final class TestProvisioningConfig {
         return composite(mavenBundle("io.primeval", "primeval-json").versionAsInProject(),
                 mavenBundle("io.primeval", "primeval-jackson-guava18", "1.0.0-SNAPSHOT"),
                 mavenBundle("io.primeval", "primeval-jackson-guava21", "1.0.0-SNAPSHOT"),
+                mavenBundle("io.primeval", "primeval-jackson-guava23", "1.0.0-SNAPSHOT"),
                 mavenBundle("io.primeval", "primeval-json-jackson").versionAsInProject());
     }
 

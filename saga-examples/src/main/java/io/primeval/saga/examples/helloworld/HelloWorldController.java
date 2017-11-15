@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.util.promise.Promise;
@@ -40,10 +41,21 @@ public final class HelloWorldController {
 
     @Reference
     public ReactiveResourceReader reactiveResourceReader;
+    
+    
+    @Activate
+    public void activate() {
+        System.out.println("Super hello");
+    }
 
     @Route(method = HttpMethod.GET, uri = "hello")
     public String hello(@QueryParameter String who) {
         return "Hello " + who;
+    }
+    
+    @Route(method = HttpMethod.GET, uri = "hello2")
+    public String hello2(@QueryParameter String who) {
+        return "Hello " + who + "!!";
     }
 
     @Route(method = HttpMethod.GET, uri = "ingredients")

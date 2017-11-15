@@ -16,7 +16,6 @@
 	<packaging>jar</packaging>
 
 	<properties>
-		<thymeleaf.version>3.0.6.RELEASE</thymeleaf.version>
 		<primeval-cmpn-i18n.version>1.0.0-SNAPSHOT</primeval-cmpn-i18n.version>
 		<primeval-reflex.version>1.0.0-SNAPSHOT</primeval-reflex.version>
 	</properties>
@@ -29,26 +28,11 @@
 			<version>${project.version}</version>
 		</dependency>
 
-
-		<dependency>
-			<groupId>io.primeval.compendium</groupId>
-			<artifactId>primeval-cmpn-i18n</artifactId>
-			<version>${primeval-cmpn-i18n.version}</version>
-		</dependency>
-
-
 		<dependency>
 			<groupId>io.primeval.saga</groupId>
 			<artifactId>saga-base-annotations</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>io.primeval</groupId>
-			<artifactId>primeval-reflex</artifactId>
-			<version>${primeval-reflex.version}</version>
-		</dependency>
-
 
 		<dependency>
 			<groupId>io.primeval.saga</groupId>
@@ -57,32 +41,22 @@
 		</dependency>
 
 		<dependency>
+			<groupId>io.primeval.compendium</groupId>
+			<artifactId>primeval-cmpn-i18n</artifactId>
+		</dependency>
+
+
+		<dependency>
 			<groupId>io.primeval</groupId>
-			<artifactId>primeval-json-jackson</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<artifactId>primeval-reflex</artifactId>
 		</dependency>
 
 
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>21.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.12</version>
 		</dependency>
 
 	</dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>biz.aQute.bnd</groupId>
-				<artifactId>bnd-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
 </project>

@@ -6,8 +6,6 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.util.promise.Deferred;
 import org.osgi.util.promise.Promise;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.davfx.ninio.core.Address;
 import com.davfx.ninio.core.Listener;
@@ -25,8 +23,6 @@ import reactor.core.publisher.UnicastProcessor;
 @Component
 @SagaProvider(name = NinioSagaShared.PROVIDER_NAME)
 public final class NinioHttpServerProvider implements HttpServerProvider {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(NinioHttpServerProvider.class);
 
     private Ninio ninio;
 
