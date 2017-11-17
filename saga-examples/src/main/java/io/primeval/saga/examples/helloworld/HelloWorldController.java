@@ -45,7 +45,7 @@ public final class HelloWorldController {
     
     @Activate
     public void activate() {
-        System.out.println("Super hello");
+        System.out.println("Super hello 3");
     }
 
     @Route(method = HttpMethod.GET, uri = "hello")

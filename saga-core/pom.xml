@@ -37,6 +37,11 @@
 			<artifactId>primeval-cmpn-i18n</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>io.primeval.component.annotation</groupId>
+			<artifactId>component-annotation-properties</artifactId>
+		</dependency>
+
 
 		<dependency>
 			<groupId>io.primeval</groupId>

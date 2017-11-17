@@ -1,5 +1,5 @@
 -standalone: target/index.xml
-
+-plugin: io.primeval.bnd.watcher.WatcherPlugin
 
 -runfw: org.apache.felix.framework;version=5.6.10
 -runee: JavaSE-1.8

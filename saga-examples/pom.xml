@@ -16,12 +16,14 @@
 	<packaging>jar</packaging>
 
 	<dependencies>
+
+
+
 		<dependency>
 			<groupId>io.primeval.saga</groupId>
 			<artifactId>saga-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
 
 		<dependency>
 			<groupId>io.primeval.saga</groupId>
@@ -35,6 +37,13 @@
 			<version>${project.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>io.primeval</groupId>
+			<artifactId>primeval-thirdparty-rt-bom</artifactId>
+			<version>${primeval-3rdparty-bom.version}</version>
+			<type>pom</type>
+			<scope>runtime</scope>
+		</dependency>
 
 
 		<!-- RUNTIME -->
@@ -42,83 +51,27 @@
 			<groupId>io.primeval.saga</groupId>
 			<artifactId>saga-core</artifactId>
 			<version>${project.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- PROVIDED BY RUNTIME -->
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
 			<scope>provided</scope>
 		</dependency>
 
-
-
-
-
 		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.framework</artifactId>
-			<version>5.6.10</version>
-			<scope>runtime</scope>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi.cmpn</artifactId>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.log</artifactId>
-			<version>1.0.1</version>
-			<scope>runtime</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.osgi</groupId>
-					<artifactId>org.osgi.compendium</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>org.osgi</groupId>
+			<artifactId>osgi.annotation</artifactId>
+			<scope>provided</scope>
 		</dependency>
-
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.scr</artifactId>
-			<version>2.0.12</version>
-			<scope>runtime</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>animal-sniffer-annotations</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.gogo.command</artifactId>
-			<version>1.0.2</version>
-			<scope>runtime</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.osgi</groupId>
-					<artifactId>org.osgi.compendium</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.gogo.shell</artifactId>
-			<version>1.0.0</version>
-			<scope>runtime</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-core</artifactId>
-			<version>1.2.3</version>
-			<scope>runtime</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>1.2.3</version>
-			<scope>runtime</scope>
-		</dependency>
-
-
-
 	</dependencies>
 
 	<profiles>
