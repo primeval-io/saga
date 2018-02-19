@@ -26,9 +26,11 @@ import java.util.Collections;
 import java.util.Hashtable;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -36,6 +38,8 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
 import org.osgi.util.promise.Promise;
@@ -110,8 +114,7 @@ public class SagaIntegrationTest {
     // @Ignore
     public void someTest() throws Exception {
 
-        // BundleContext bundleContext =
-        // FrameworkUtil.getBundle(SagaIntegrationTest.class).getBundleContext();
+        BundleContext bundleContext = FrameworkUtil.getBundle(SagaIntegrationTest.class).getBundleContext();
         // Collection<ComponentDescriptionDTO> componentDescriptionDTOs = scr
         // .getComponentDescriptionDTOs(bundleContext.getBundles());
         //
@@ -121,10 +124,10 @@ public class SagaIntegrationTest {
         // .forEach(ccd -> System.out.println(dto.name + " " + ccd));
         // });
         //
-        // Stream.of(bundleContext.getBundles()).forEach(bundle -> {
-        // System.out.println(bundle.getSymbolicName() + " " +
-        // bundle.getVersion());
-        // });
+        Stream.of(bundleContext.getBundles()).forEach(bundle -> {
+            System.out.println(bundle.getSymbolicName() + " " +
+                    bundle.getVersion() + " " + bundle.getBundleId());
+        });
 
         Hashtable<String, Object> corsConfig = new Hashtable<>();
         corsConfig.put("allowed.hosts", "*");
@@ -145,16 +148,19 @@ public class SagaIntegrationTest {
 
         assertThat(response).isEqualTo("Hello World");
 
+        System.out.println(ImmutableList.class.getClassLoader());
+
         HttpClientRawResponse rawResp = httpClient.to("localhost", port).get("/ingredients")
                 .withHeader(HeaderNames.ACCEPT, MimeTypes.JSON).exec().getValue();
         LOGGER.info(getAsString(rawResp));
-        
-        Promise<ImmutableList<String>> igtPms = PromiseHelper.wrapPromise(() -> httpClient.to("localhost", port).get("/ingredients")
-                .withHeader(HeaderNames.ACCEPT, MimeTypes.JSON)
-                .execMap(new TypeTag<ImmutableList<String>>() {
-                }));
+
+        Promise<ImmutableList<String>> igtPms = PromiseHelper
+                .wrapPromise(() -> httpClient.to("localhost", port).get("/ingredients")
+                        .withHeader(HeaderNames.ACCEPT, MimeTypes.JSON)
+                        .execMap(new TypeTag<ImmutableList<String>>() {
+                        }));
         PromiseHelper.onFailure(igtPms, t -> t.printStackTrace());
-        
+
         ImmutableList<String> ingredients = igtPms.getValue();
 
         assertThat(ingredients).contains("Milk");

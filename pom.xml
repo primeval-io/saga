@@ -15,9 +15,9 @@
 
 
 	<properties>
-		<primeval-commons.version>1.1.0-SNAPSHOT</primeval-commons.version>
-		<primeval-codex.version>1.1.0-SNAPSHOT</primeval-codex.version>
-		<primeval-3rdparty-bom.version>1.0.0-SNAPSHOT</primeval-3rdparty-bom.version>
+		<primeval-commons.version>1.1.0</primeval-commons.version>
+		<primeval-codex.version>1.1.0</primeval-codex.version>
+		<primeval-3rdparty-bom.version>1.0.0</primeval-3rdparty-bom.version>
 		<primeval-component-annotations.version>2.0.0</primeval-component-annotations.version>
 		<primeval-json.version>1.0.0-SNAPSHOT</primeval-json.version>
 		<primeval-json-jackson.version>1.0.0-SNAPSHOT</primeval-json-jackson.version>
