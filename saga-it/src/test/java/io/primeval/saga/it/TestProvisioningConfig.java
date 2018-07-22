@@ -65,12 +65,13 @@ public final class TestProvisioningConfig {
     }
 
     public static Option dsAndFriends() {
-        return composite(mavenBundle("org.apache.felix", "org.apache.felix.log", "1.0.1"),
-                mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.1.2"),
-                mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.8"),
-                mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.0.2"));
+        return composite(mavenBundle("org.osgi", "org.osgi.util.function", "1.1.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.log", "1.0.1"),
+                mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.2.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.9.2"),
+                mavenBundle("org.apache.felix", "org.apache.felix.scr", "2.1.0"));
     }
-    
+
     public static Option guavas() {
         return composite(mavenBundle("com.google.guava", "guava", "18.0"),
                 mavenBundle("com.google.guava", "guava", "21.0"),
@@ -88,7 +89,7 @@ public final class TestProvisioningConfig {
 
     public static Option primevalCommonsAndCodex() {
         return composite(mavenBundle("org.reactivestreams", "reactive-streams").versionAsInProject(),
-                mavenBundle("org.jetbrains.kotlin", "kotlin-osgi-bundle", "1.1.51"),
+                mavenBundle("org.jetbrains.kotlin", "kotlin-osgi-bundle", "1.2.41"),
                 mavenBundle("com.google.code.findbugs", "jsr305", "3.0.2"),
                 mavenBundle("io.projectreactor", "reactor-core").versionAsInProject(),
                 mavenBundle("io.primeval", "primeval-commons").versionAsInProject(),
@@ -107,6 +108,7 @@ public final class TestProvisioningConfig {
                 mavenBundle("io.primeval", "primeval-jackson-guava18", "1.0.0-SNAPSHOT"),
                 mavenBundle("io.primeval", "primeval-jackson-guava21", "1.0.0-SNAPSHOT"),
                 mavenBundle("io.primeval", "primeval-jackson-guava23", "1.0.0-SNAPSHOT"),
+                mavenBundle("io.primeval", "primeval-jackson-guava24", "1.0.0-SNAPSHOT"),
                 mavenBundle("io.primeval", "primeval-json-jackson").versionAsInProject());
     }
 

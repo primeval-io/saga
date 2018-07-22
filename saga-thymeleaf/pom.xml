@@ -35,6 +35,10 @@
 			<version>${project.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.service.component</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>io.primeval.compendium</groupId>

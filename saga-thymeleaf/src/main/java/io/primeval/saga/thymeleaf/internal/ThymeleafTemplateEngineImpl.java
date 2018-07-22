@@ -44,7 +44,7 @@ public final class ThymeleafTemplateEngineImpl implements TemplateEngineProvider
     private Serializer serializer;
 
     @Activate
-    public void activate(ComponentContext componentContext) {
+    public void activate() {
         engine = new org.thymeleaf.TemplateEngine();
         engine.setDialect(new SagaDialect());
         engine.setTemplateResolver(new SagaTemplateResolver());
